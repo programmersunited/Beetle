@@ -1,0 +1,182 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "description": "Base configuration settings for Beetle.",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "BEETLE_ENABLE_ASSERTS": "ON",
+        "BEETLE_BUILD_DOCS": "OFF",
+        "BEETLE_BUILD_TESTS": "OFF",
+        "BEETLE_BUILD_EXAMPLES": "OFF"
+      }
+    },
+    {
+      "name": "x64",
+      "hidden": true,
+      "description": "Base x64 configuration settings for Beetle.",
+      "inherits": "base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "x86",
+      "hidden": true,
+      "description": "Base x86 configuration settings for Beetle.",
+      "inherits": "base",
+      "architecture": {
+        "value": "x86",
+        "strategy": "set"
+      }
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "description": "This build is only available on Linux.",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "description": "This build is only available on Windows.",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "gcc-base",
+      "hidden": true,
+      "description": "Sets GCC as the compiler.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang-base",
+      "hidden": true,
+      "description": "Sets Clang as the compiler.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang"
+      }
+    },
+    {
+      "name": "msvc-base",
+      "hidden": true,
+      "description": "Sets MSVC as the compiler.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug Configuration",
+      "description": "Debug configuration for Beetle.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BEETLE_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release Configuration",
+      "description": "Release configuration for Beetle.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BEETLE_ENABLE_ASSERTS": "OFF",
+        "BEETLE_BUILD_DOCS": "ON",
+        "BEETLE_BUILD_TESTS": "ON",
+        "BEETLE_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug Configuration",
+      "description": "Linux debug configuration for Beetle.",
+      "inherits": ["debug", "linux-base"]
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release Configuration",
+      "description": "Linux release configuration for Beetle.",
+      "inherits": ["release", "linux-base"]
+    },
+    {
+      "name": "linux-x64-debug",
+      "displayName": "Linux x64 Debug Configuration",
+      "description": "Linux x64 debug configuration for Beetle.",
+      "inherits": ["linux-debug", "x64"]
+    },
+    {
+      "name": "linux-x64-release",
+      "displayName": "Linux x64 Release Configuration",
+      "description": "Linux x64 release configuration for Beetle.",
+      "inherits": ["linux-release", "x64"]
+    },
+    {
+      "name": "linux-x86-debug",
+      "displayName": "Linux x86 Debug Configuration",
+      "description": "Linux x86 debug configuration for Beetle.",
+      "inherits": ["linux-debug", "x86"]
+    },
+    {
+      "name": "linux-x86-release",
+      "displayName": "Linux x86 Release Configuration",
+      "description": "Linux x86 release configuration for Beetle.",
+      "inherits": ["linux-release", "x86"]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default-build",
+      "displayName": "Default Build",
+      "description": "Vanilla Build.",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "clean-default-build",
+      "displayName": "Clean Default Build",
+      "description": "Clean Linux Build.",
+      "configurePreset": "debug",
+      "cleanFirst": true
+    },
+    {
+      "name": "default-build-linux",
+      "displayName": "Default Linux Build",
+      "description": "Vanilla Linux Build.",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "clean-default-build-linux",
+      "displayName": "Clean Default Linux Build",
+      "description": "Clean Linux Build.",
+      "configurePreset": "linux-debug",
+      "cleanFirst": true
+    }
+  ]
+}

@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+# Ignore .clang files
+.clang*
+
+# Ignore possible build folders
+out
+build
+
+# Ignore other
+.ycm_extra_conf.py
