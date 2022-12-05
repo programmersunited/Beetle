@@ -126,22 +126,22 @@ TEST(CodeUnit, is_leading_byte) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_leading_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is a leading byte.";
+                << std::quoted(to_hex(code_unit)) << " Is supposed to be a leading byte.";
     });
 
     inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_leading_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a leading byte.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_leading_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is a leading byte.";
+            << std::quoted(to_hex(code_unit)) << " Is supposed to be a leading byte.";
     });
 
     inclusive_invalid_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_leading_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a leading byte.";
     });
 }
 
@@ -150,22 +150,22 @@ TEST(CodeUnit, is_leading_multiple_bytes) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_leading_multiple_bytes(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a leading mb.";
     });
 
     inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_leading_multiple_bytes(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a leading mb.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_leading_multiple_bytes(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is a leading byte.";
+            << std::quoted(to_hex(code_unit)) << " Is supposed to be a leading mb.";
     });
 
     inclusive_invalid_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_leading_multiple_bytes(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a leading mb.";
     });
 }
 
@@ -174,22 +174,22 @@ TEST(CodeUnit, is_continuation_byte) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a continuation byte.";
     });
 
     inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_continuation_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is a continuation byte.";
+                << std::quoted(to_hex(code_unit)) << " Is supposed to be a continuation byte.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a continuation byte.";
     });
 
     inclusive_invalid_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a continuation byte.";
     });
 }
 
@@ -198,22 +198,22 @@ TEST(CodeUnit, is_valid_byte) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+                << std::quoted(to_hex(code_unit)) << " Is supposed to be a valid byte.";
     });
 
     inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+                << std::quoted(to_hex(code_unit)) << " Is supposed to be a valid byte.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+            << std::quoted(to_hex(code_unit)) << " Is supposed to be a valid byte.";
     });
 
     inclusive_invalid_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_valid_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT a valid byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be a valid byte.";
     });
 }
 
@@ -222,22 +222,22 @@ TEST(CodeUnit, is_invalid_byte) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be an invalid byte.";
     });
 
     inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+                << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be an invalid byte.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be an invalid byte.";
     });
 
     inclusive_invalid_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_invalid_byte(code_unit)) 
-            << std::quoted(to_hex(code_unit)) << " Is an invalid byte.";
+            << std::quoted(to_hex(code_unit)) << " Is supposed to be an invalid byte.";
     });
 }
 
