@@ -10,6 +10,9 @@
 
 /**
  * Unit tests for beetle/code_unit.hpp
+ *
+ * @note Tests all code unit values for leading, invalid leading and 
+ * continuation bytes since the range is small enough.
  */
 namespace {
 
@@ -23,17 +26,16 @@ std::string to_hex(char8_t code_unit) {
 }
 
 void inclusive_range(char8_t first, char8_t last, std::function<void(char8_t)> func) {
-    for (; first <= last; ++first) {
+    // Avoids overflow
+    for (; first < last; ++first) {
         func(first);
     }
+
+    func(last);
 }
 
 void inclusive_ascii_range(std::function<void(char8_t)> func) {
     inclusive_range(0, 0b0111'1111, func);
-}
-
-void inclusive_invalid_ascii_range(std::function<void(char8_t)> func) {
-    inclusive_range(0b1000'0000, 0b1011'1111, func);
 }
 
 void inclusive_mb_2_range(std::function<void(char8_t)> func) {
@@ -53,14 +55,14 @@ void inclusive_mb_range(std::function<void(char8_t)> func) {
 }
 
 void inclusive_invalid_upper_mb_range(std::function<void(char8_t)> func) {
-    // Undefined behavior if you're including max in <=
-    // Need to do it separately or else it will wrap around to zero again
-    inclusive_range(0b1111'1000, 0b1111'1110, func);
-    func(0b1111'1111);
+    inclusive_range(0b1111'1000, 0b1111'1111, func);
+}
+
+void inclusive_continuation_byte_range(std::function<void(char8_t)> func) {
+    inclusive_range(0b1000'0000, 0b1011'1111, func);
 }
 
 void inclusive_invalid_range(std::function<void(char8_t)> func) {
-    inclusive_invalid_ascii_range(func);
     inclusive_invalid_upper_mb_range(func);
 }
 
@@ -79,9 +81,19 @@ TEST(CodeUnit, is_ascii) {
                 << std::quoted(to_hex(code_unit)) << " Is supposed to be ASCII";
     });
 
-    inclusive_invalid_ascii_range([](char8_t code_unit) -> void {
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_ascii(code_unit)) 
                 << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII";
+    });
+
+    inclusive_mb_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_ascii(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII";
+    });
+
+    inclusive_invalid_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_ascii(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII.";
     });
 }
 
@@ -90,12 +102,22 @@ TEST(CodeUnit, is_not_ascii) {
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_FALSE(utf8::is_not_ascii(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is supposed to be ASCII";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_not_ascii(code_unit)) 
                 << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII";
     });
 
-    inclusive_invalid_ascii_range([](char8_t code_unit) -> void {
+    inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_not_ascii(code_unit)) 
-                << std::quoted(to_hex(code_unit)) << " Is supposed to be ASCII";
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII";
+    });
+
+    inclusive_invalid_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_not_ascii(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT supposed to be ASCII.";
     });
 }
 
@@ -105,6 +127,11 @@ TEST(CodeUnit, is_leading_byte) {
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_leading_byte(code_unit)) 
                 << std::quoted(to_hex(code_unit)) << " Is a leading byte.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_leading_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
     });
 
     inclusive_mb_range([](char8_t code_unit) -> void {
@@ -126,6 +153,11 @@ TEST(CodeUnit, is_leading_multiple_bytes) {
                 << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
     });
 
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_leading_multiple_bytes(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is NOT a leading byte.";
+    });
+
     inclusive_mb_range([](char8_t code_unit) -> void {
         EXPECT_TRUE(utf8::is_leading_multiple_bytes(code_unit)) 
             << std::quoted(to_hex(code_unit)) << " Is a leading byte.";
@@ -137,12 +169,91 @@ TEST(CodeUnit, is_leading_multiple_bytes) {
     });
 }
 
+TEST(CodeUnit, is_continuation_byte) {
+    using namespace beetle;
+
+    inclusive_ascii_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_continuation_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is a continuation byte.";
+    });
+
+    inclusive_mb_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+    });
+
+    inclusive_invalid_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_continuation_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT a continuation byte.";
+    });
+}
+
+TEST(CodeUnit, is_valid_byte) {
+    using namespace beetle;
+
+    inclusive_ascii_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+    });
+
+    inclusive_mb_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_valid_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is a valid byte.";
+    });
+
+    inclusive_invalid_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_valid_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT a valid byte.";
+    });
+}
+
+TEST(CodeUnit, is_invalid_byte) {
+    using namespace beetle;
+
+    inclusive_ascii_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
+                << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+    });
+
+    inclusive_mb_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::is_invalid_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is NOT an invalid byte.";
+    });
+
+    inclusive_invalid_range([](char8_t code_unit) -> void {
+        EXPECT_TRUE(utf8::is_invalid_byte(code_unit)) 
+            << std::quoted(to_hex(code_unit)) << " Is an invalid byte.";
+    });
+}
+
 TEST(CodeUnit, leading_byte_size) {
     using namespace beetle;
 
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_EQ(utf8::leading_byte_size(code_unit), 1) 
                 << std::quoted(to_hex(code_unit)) << " Size is supposed to be 1.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_THROW({
+          auto tmp = utf8::leading_byte_size(code_unit);
+        }, std::invalid_argument)   << std::quoted(to_hex(code_unit)) 
+                                    << " Expecting throw.";;
     });
 
     // Byte 2
@@ -186,6 +297,11 @@ TEST(CodeUnit, peek_char_size) {
     inclusive_ascii_range([](char8_t code_unit) -> void {
         EXPECT_EQ(utf8::peek_char_size(code_unit).value(), 1) 
                 << std::quoted(to_hex(code_unit)) << " Size is supposed to be 1.";
+    });
+
+    inclusive_continuation_byte_range([](char8_t code_unit) -> void {
+        EXPECT_FALSE(utf8::peek_char_size(code_unit).has_value()) 
+            << std::quoted(to_hex(code_unit)) << " Size should not be returned.";
     });
 
     // Byte 2
