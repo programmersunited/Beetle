@@ -5,13 +5,13 @@
 #include "beetle/assert.hpp"
 #include "beetle/code_unit.hpp"
 
-void usage() {
+auto usage() -> void {
     std::cout << "Beetle Version " << beetle::version_string << '\n';
     std::cout << "Usage: beetle [OPTION]... [FILE]..." << '\n';
     std::cout << "A simple utility to encode, decode and verify UTF-8." << '\n';
 }
 
-void parse_command_line(int argc, [[maybe_unused]] char** argv) {
+auto parse_command_line(int argc, [[maybe_unused]] char** argv) -> void {
     // No arguments passed
     if (argc == 1) {
         usage();
@@ -22,7 +22,7 @@ void parse_command_line(int argc, [[maybe_unused]] char** argv) {
     // TODO(programmersunited): Implement after library is done.
 }
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
     // TODO(programmersunited): Uncomment and implement after library is done.
     // parse_command_line(argc, argv);
     beetle::assert(true, "This is a test message!");

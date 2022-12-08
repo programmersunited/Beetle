@@ -49,7 +49,7 @@ inline namespace cpp20_v1 {
  * @see beetle::is_leading_byte
  * @see beetle::is_leading_multiple_bytes
  */
-inline constexpr char8_t g_firstLeadingByte{0};              // 0xxx xxxx
+inline constexpr auto g_firstLeadingByte = char8_t{0};              // 0xxx xxxx
 
 /**
  * The last leading byte value.
@@ -60,7 +60,7 @@ inline constexpr char8_t g_firstLeadingByte{0};              // 0xxx xxxx
  * @see beetle::is_leading_byte
  * @see beetle::is_leading_multiple_bytes
  */
-inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
+inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
 
 /**
  * Checks if the given code unit is ASCII.
@@ -69,7 +69,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return True if ASCII otherwise false
  */
-[[nodiscard]] constexpr bool is_ascii(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_ascii(char8_t code_unit) noexcept -> bool {
     // Check if format is in 0xxx xxxx
     return (code_unit & 0x80U) == 0x00U; // NOLINT(*-magic-numbers)
 }
@@ -81,7 +81,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return True if not ASCII otherwise false
  */
-[[nodiscard]] constexpr bool is_not_ascii(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_not_ascii(char8_t code_unit) noexcept -> bool {
     return !is_ascii(code_unit);
 }
 
@@ -92,8 +92,8 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return True if a leading byte and not ASCII, otherwise false.
  */
-[[nodiscard]] constexpr bool is_leading_multiple_bytes(
-    char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_leading_multiple_bytes(
+    char8_t code_unit) noexcept -> bool {
     // NOLINTNEXTLINE(*-magic-numbers)
     return code_unit >= 0b1100'0000 && code_unit <= g_lastLeadingByte;
 }
@@ -105,7 +105,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return True if the given code unit is a leading byte, otherwise false
  */
-[[nodiscard]] constexpr bool is_leading_byte(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_leading_byte(char8_t code_unit) noexcept -> bool {
     return is_ascii(code_unit) || is_leading_multiple_bytes(code_unit);
 }
 
@@ -118,7 +118,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return True if a continuation byte, otherwise false
  */
-[[nodiscard]] constexpr bool is_continuation_byte(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_continuation_byte(char8_t code_unit) noexcept -> bool {
     return (code_unit & 0xC0U) == 0x80U; // NOLINT(*-magic-numbers)
 }
 
@@ -130,7 +130,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  * @return True if the given code unit is a valid UTF-8 character code unit
  * otherwise false
  */
-[[nodiscard]] constexpr bool is_valid_byte(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_valid_byte(char8_t code_unit) noexcept -> bool {
     return is_continuation_byte(code_unit) || is_leading_byte(code_unit);
 }
 
@@ -142,7 +142,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  * @return True if the given code unit is an invalid UTF-8 character code unit
  * otherwise false
  */
-[[nodiscard]] constexpr bool is_invalid_byte(char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto is_invalid_byte(char8_t code_unit) noexcept -> bool {
     return !is_valid_byte(code_unit);
 }
 
@@ -156,7 +156,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  *
  * @return The size of the leading byte code unit.
  */
-[[nodiscard]] constexpr std::int8_t leading_byte_size(char8_t code_unit) {
+[[nodiscard]] constexpr auto leading_byte_size(char8_t code_unit) -> std::int8_t {
     // NOLINTBEGIN(*-magic-numbers, *-around-statements)
     if (is_ascii(code_unit))            return 1;
     if ((code_unit & 0xE0U) == 0xC0U)   return 2;   // 110x xxxx
@@ -181,8 +181,7 @@ inline constexpr char8_t g_lastLeadingByte{0b1111'0111};    // 1111 0xxx
  * @return The size of the UTF-8 character based on the code unit if valid,
  * otherwise std::nullopt.
  */
-[[nodiscard]] constexpr std::optional<std::int8_t> peek_char_size(
-    char8_t code_unit) noexcept {
+[[nodiscard]] constexpr auto peek_char_size(char8_t code_unit) noexcept -> std::optional<std::int8_t> {
     if (is_leading_byte(code_unit)) [[likely]] {
         return leading_byte_size(code_unit);
     }
