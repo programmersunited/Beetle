@@ -40,7 +40,7 @@ option(BEETLE_ENABLE_ASSERTS "Asserts will be active regardless of configuration
 #                                                                              #
 ################################################################################
 
-# Add API and source files
+# Add internal API and source files
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 #if(BEETLE_BUILD_DOCS)

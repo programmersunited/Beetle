@@ -22,18 +22,16 @@
 * SOFTWARE.
 */
 
-#include <cstdint>
-#include <type_traits>
-
 #ifndef BEETLE_TYPES_HPP
 #define BEETLE_TYPES_HPP
+
+#include <cstdint>
+#include <type_traits>
 
 /**
  * Contains the types used by the Beetle UTF-8 library.
  *
  * @note The types are in place for portability.
- *
- * @file validate.hpp
  */
 
 namespace beetle {

@@ -22,12 +22,13 @@
 * SOFTWARE.
 */
 
-#ifndef BEETLE_CODE_UNIT_HPP
-#define BEETLE_CODE_UNIT_HPP
+#ifndef BEETLE_CODE_UNIT_CODE_UNIT_HPP
+#define BEETLE_CODE_UNIT_CODE_UNIT_HPP
 
 #include <cstdint>
 #include <optional>
-#include <stdexcept>
+
+#include "beetle/code_unit/exception.hpp"
 
 /**
  * Contains ways to inspect a single UTF-8 code unit.
@@ -147,6 +148,36 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
 }
 
 /**
+ * 
+ *
+ * @note Does not check for overlong encoding.
+ */
+[[nodiscard]] constexpr auto is_leading_mb_2(char8_t code_unit) -> bool {
+    // NOLINTNEXTLINE(*-magic-numbers)
+    return (code_unit & 0xE0U) == 0xC0U; // 110x xxxx
+}
+
+/**
+ * 
+ *
+ * @note Does not check for overlong encoding.
+ */
+[[nodiscard]] constexpr auto is_leading_mb_3(char8_t code_unit) -> bool {
+    // NOLINTNEXTLINE(*-magic-numbers)
+    return (code_unit & 0xF0U) == 0xE0U; // 1110 xxxx
+}
+
+/**
+ * 
+ *
+ * @note Does not check for overlong encoding.
+ */
+[[nodiscard]] constexpr auto is_leading_mb_4(char8_t code_unit) -> bool {
+    // NOLINTNEXTLINE(*-magic-numbers)
+    return (code_unit & 0xF8U) == 0xF0U; // 1111 0xxx
+}
+
+/**
  * Returns the size of the leading code unit byte.
  *
  * @precondition The given code unit is a leading byte.
@@ -157,16 +188,34 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  * @return The size of the leading byte code unit.
  */
 [[nodiscard]] constexpr auto leading_byte_size(char8_t code_unit) -> std::int8_t {
-    // NOLINTBEGIN(*-magic-numbers, *-around-statements)
-    if (is_ascii(code_unit))            return 1;
-    if ((code_unit & 0xE0U) == 0xC0U)   return 2;   // 110x xxxx
-    if ((code_unit & 0xF0U) == 0xE0U)   return 3;   // 1110 xxxx
-    if ((code_unit & 0xF8U) == 0xF0U)   return 4;   // 1111 0xxx
-    // NOLINTEND(*-magic-numbers, *-around-statements)
+    // NOLINTBEGIN(*-around-statements)
+    if (is_ascii(code_unit))        return 1;
+    if (is_leading_mb_2(code_unit)) return 2;
+    if (is_leading_mb_3(code_unit)) return 3;
+    if (is_leading_mb_4(code_unit)) return 4;
+    // NOLINTEND(*-around-statements)
 
-    // TODO(programmersunited): Replace with custom UTF-8 exception type.
-    throw std::invalid_argument{
-        "The given UTF-8 code unit is not a leading byte."};
+    throw beetle::exceptions::utf8::ExpectingLeadingByte{code_unit};
+}
+
+/**
+ * Returns the *possible* size of the UTF-8 character based on the first
+ * byte/code unit.
+ *
+ * @note This does not mean the following continuation bytes, if there are any,
+ * will be valid.
+ *
+ * @param code_unit The UTF-8 code unit to check
+ *
+ * @return The size of the UTF-8 character based on the code unit if valid,
+ * otherwise std::nullopt.
+ */
+[[nodiscard]] constexpr auto try_leading_byte_size(char8_t code_unit) noexcept -> std::optional<std::int8_t> {
+    if (is_leading_byte(code_unit)) [[likely]] {
+        return leading_byte_size(code_unit);
+    }
+    
+    return std::nullopt;
 }
 
 /**

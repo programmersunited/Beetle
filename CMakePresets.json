@@ -16,7 +16,8 @@
         "BEETLE_ENABLE_ASSERTS": "ON",
         "BEETLE_BUILD_DOCS": "OFF",
         "BEETLE_BUILD_TESTS": "OFF",
-        "BEETLE_BUILD_EXAMPLES": "OFF"
+        "BEETLE_BUILD_EXAMPLES": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -78,7 +79,7 @@
       "inherits": "base",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang"
+        "CMAKE_CXX_COMPILER": "clang++"
       }
     },
     {
@@ -95,7 +96,7 @@
       "name": "debug",
       "displayName": "Debug Configuration",
       "description": "Debug configuration for Beetle.",
-      "inherits": "base",
+      "inherits": "clang-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "BEETLE_BUILD_TESTS": "ON"

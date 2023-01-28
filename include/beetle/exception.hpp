@@ -22,29 +22,61 @@
 * SOFTWARE.
 */
 
-#ifndef BEETLE_ASSERT_HPP
-#define BEETLE_ASSERT_HPP
+#ifndef BEETLE_EXCEPTION_HPP
+#define BEETLE_EXCEPTION_HPP
 
-#include <optional>
-#include <source_location>
-#include <string_view>
+#ifdef __cpp_lib_format
+#include <format>
+#endif
 
-/**
- * Contains algorithms to inspect a sequence of code units.
- *
- * @file assert.hpp
- */
+#include <stdexcept>
+#include <string>
 
 namespace beetle {
+
+inline namespace exceptions {
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 inline namespace cpp20_v1 {
 
-void assert(bool condition, 
-            std::optional<std::string_view> message = std::nullopt, 
-            std::source_location location = std::source_location::current());
+/**
+ * Base Beetle exception type.
+ *
+ * @note This should be used if the goal is to catch **ALL** exceptions thrown 
+ * by Beetle.
+ */
+class Exception : public std::exception {
+    public:
+        using this_type = Exception;
+        using base_type = std::exception;
+
+        explicit Exception(std::string msg);
+
+#ifdef __cpp_lib_format
+        template <class... Args>
+        Exception(std::format_string<Args...> fmt, Args&&... args) 
+            : m_msg {std::format(std::move(fmt), std::forward<Args>(args)...)} {}
+#endif
+
+        Exception(this_type const& other) = default;
+
+        Exception(this_type&& other) noexcept = default;
+
+        ~Exception() override = default;
+
+        this_type& operator=(this_type const& other) = default;
+
+        this_type& operator=(this_type&& other) noexcept = default;
+
+        [[nodiscard]] char const* what() const noexcept override;
+
+    protected:
+        std::string m_msg;
+};
 
 }  // namespace cpp20_v1
+
+}  // namespace exceptions
 
 }  // namespace beetle
 

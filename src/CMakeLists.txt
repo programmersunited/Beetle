@@ -8,9 +8,12 @@
 #                                                                              #
 ################################################################################
 
+set(BEETLE_UTILITY_ENTRYPOINT "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp" CACHE INTERNAL "")
+
 # Create project's main target - has to be done before using it
 add_executable(Beetle
-    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+    ${BEETLE_UTILITY_ENTRYPOINT}
+    "${CMAKE_CURRENT_SOURCE_DIR}/exception.cpp"
 )
 
 set_target_properties(Beetle
@@ -44,10 +47,11 @@ target_include_directories(Beetle
 #)
 
 ################################################################################
-# Add API Modules                                                              #
+# Add Hidden API Modules and Source Files                                      #
 ################################################################################
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/core")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/code_unit")
 
 ################################################################################
 # Compiling - Features, flags & definitions                                    #

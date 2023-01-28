@@ -1,4 +1,4 @@
-#include "beetle/assert.hpp"
+#include "beetle/core/assert.hpp"
 
 #include <exception>
 #include <iostream>
@@ -9,10 +9,9 @@ namespace beetle {
 // NOLINTNEXTLINE(readability-identifier-naming)
 inline namespace cpp20_v1 {
 
-
 #ifdef BEETLE_ENABLE_ASSERTS
 
-void assert(bool condition, std::optional<std::string_view> message,  
+void assertion(bool condition, std::optional<std::string_view> message,  
             std::source_location location) {
     if (!condition) [[likely]] {
         return;

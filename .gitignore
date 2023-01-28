@@ -40,3 +40,5 @@ build
 
 # Ignore other
 .ycm_extra_conf.py
+.vimrc
+init.vim

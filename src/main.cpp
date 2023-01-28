@@ -1,9 +1,10 @@
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include "beetle/version.hpp"
-#include "beetle/assert.hpp"
 #include "beetle/code_unit.hpp"
+#include "beetle/exception.hpp"
+#include "beetle/code_unit/exception.hpp"
 
 auto usage() -> void {
     std::cout << "Beetle Version " << beetle::version_string << '\n';
@@ -13,7 +14,7 @@ auto usage() -> void {
 
 auto parse_command_line(int argc, [[maybe_unused]] char** argv) -> void {
     // No arguments passed
-    if (argc == 1) {
+    if (argc <= 1) {
         usage();
         return;
     }
@@ -25,10 +26,12 @@ auto parse_command_line(int argc, [[maybe_unused]] char** argv) -> void {
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
     // TODO(programmersunited): Uncomment and implement after library is done.
     // parse_command_line(argc, argv);
-    beetle::assert(true, "This is a test message!");
 
     constexpr auto is_ascii = beetle::utf8::is_ascii(65);
     std::cout << "Is 'A' ASCII? " << std::boolalpha << is_ascii << '\n';
+
+    throw beetle::exceptions::utf8::ExpectingLeadingByte{32};
+    throw beetle::utf8::ExpectingLeadingByte{32};
 
     return EXIT_SUCCESS;
 }
