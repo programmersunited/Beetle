@@ -30,8 +30,5 @@ auto main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) -> int {
     constexpr auto is_ascii = beetle::utf8::is_ascii(65);
     std::cout << "Is 'A' ASCII? " << std::boolalpha << is_ascii << '\n';
 
-    throw beetle::exceptions::utf8::ExpectingLeadingByte{32};
-    throw beetle::utf8::ExpectingLeadingByte{32};
-
     return EXIT_SUCCESS;
 }

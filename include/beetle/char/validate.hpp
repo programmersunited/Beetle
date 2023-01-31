@@ -60,7 +60,7 @@ concept code_unit_input_iterator = std::input_iterator<Iterator> &&
 
 template <code_unit_input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>
 [[nodiscard]] constexpr auto is_overlong_encoded(InputIt first, Sentinel last) -> bool {
-    auto const distance = std::range::distance(first, last);
+    auto const distance = std::ranges::distance(first, last);
 
     auto const leading_byte = *first;
     auto const char_size = utf8::try_leading_byte_size(leading_byte);
@@ -89,7 +89,7 @@ template <code_unit_input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>
 
 template <code_unit_input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>
 [[nodiscard]] constexpr auto is_mb_char(InputIt first, Sentinel last) -> bool {
-    auto const distance = std::range::distance(first, last);
+    auto const distance = std::ranges::distance(first, last);
 
     auto const leading_byte = *first;
     auto const char_size = utf8::try_leading_byte_size(leading_byte);

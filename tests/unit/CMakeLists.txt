@@ -50,6 +50,9 @@ target_include_directories(validate_test
         "${Beetle_SOURCE_DIR}/include"
 )
 
+# Temp solution
+target_sources(validate_test PRIVATE "${BEETLE_SOURCES}")
+
 target_compile_features(validate_test
     PUBLIC
         cxx_std_20
