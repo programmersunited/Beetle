@@ -38,7 +38,11 @@
 out
 build
 
-# Ignore other
-.ycm_extra_conf.py
+# Ignore vim related files
 .vimrc
 init.vim
+.ycm_extra_conf.py
+
+.cache
+
+compile_commands.json
