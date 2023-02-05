@@ -3,13 +3,11 @@
 
 #include "beetle/version.hpp"
 #include "beetle/code_unit.hpp"
-#include "beetle/exception.hpp"
-#include "beetle/code_unit/exception.hpp"
 
 auto usage() -> void {
     std::cout << "Beetle Version " << beetle::version_string << '\n';
-    std::cout << "Usage: beetle [OPTION]... [FILE]..." << '\n';
-    std::cout << "A simple utility to encode, decode and verify UTF-8." << '\n';
+    std::cout << "Usage: beetle [OPTION]... [FILE]...\n";
+    std::cout << "A simple utility to encode, decode and verify UTF-8.\n";
 }
 
 auto parse_command_line(int argc, [[maybe_unused]] char** argv) -> void {
