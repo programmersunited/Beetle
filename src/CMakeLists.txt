@@ -38,6 +38,7 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/version.hpp.in" "${BEETLE_GENERATED_
 target_include_directories(Beetle
     PUBLIC
         "../include"
+        "${CMAKE_CURRENT_SOURCE_DIR}"
         "${BEETLE_GENERATED_INCLUDE}"
 )
 
@@ -51,12 +52,14 @@ target_include_directories(Beetle
 ################################################################################
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/core")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/code_unit")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/utf8")
+#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/code_unit")
 
 ################################################################################
 # Compiling - Features, flags & definitions                                    #
 ################################################################################
 
+# The current target is C++20 but most compilers do not fully support C++20 yet
 target_compile_features(Beetle
     PUBLIC
         cxx_std_20

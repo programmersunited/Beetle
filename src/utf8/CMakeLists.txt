@@ -1,4 +1,4 @@
-# src/core/CMakeLists.txt
+# src/utf8/CMakeLists.txt
 
-# Add internal core API
+# Add utf8 internal API
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/internal")

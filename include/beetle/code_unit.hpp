@@ -1,32 +1,36 @@
 /*
-* MIT License
-* 
-* Copyright (c) 2022 programmersunited
-* 
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-* 
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
+ * MIT License
+ *
+ * Copyright (c) 2022 programmersunited
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #ifndef BEETLE_CODE_UNIT_CODE_UNIT_HPP
 #define BEETLE_CODE_UNIT_CODE_UNIT_HPP
 
+#include <array>
+#include <bit>
+#include <cassert>
 #include <cstdint>
 #include <optional>
+#include <type_traits>
 
 #include "beetle/code_unit/exception.hpp"
 
@@ -50,7 +54,7 @@ inline namespace cpp20_v1 {
  * @see beetle::is_leading_byte
  * @see beetle::is_leading_multiple_bytes
  */
-inline constexpr auto g_firstLeadingByte = char8_t{0};              // 0xxx xxxx
+inline constexpr auto g_firstLeadingByte = char8_t{0};  // 0xxx xxxx
 
 /**
  * The last leading byte value.
@@ -61,7 +65,7 @@ inline constexpr auto g_firstLeadingByte = char8_t{0};              // 0xxx xxxx
  * @see beetle::is_leading_byte
  * @see beetle::is_leading_multiple_bytes
  */
-inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
+inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};  // 1111 0xxx
 
 /**
  * Checks if the given code unit is ASCII.
@@ -72,7 +76,7 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  */
 [[nodiscard]] constexpr auto is_ascii(char8_t code_unit) noexcept -> bool {
     // Check if format is in 0xxx xxxx
-    return (code_unit & 0x80U) == 0x00U; // NOLINT(*-magic-numbers)
+    return (code_unit & 0x80U) == 0x00U;  // NOLINT(*-magic-numbers)
 }
 
 /**
@@ -82,9 +86,7 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  *
  * @return True if not ASCII otherwise false
  */
-[[nodiscard]] constexpr auto is_not_ascii(char8_t code_unit) noexcept -> bool {
-    return !is_ascii(code_unit);
-}
+[[nodiscard]] constexpr auto is_not_ascii(char8_t code_unit) noexcept -> bool { return !is_ascii(code_unit); }
 
 /**
  * Checks if the given UTF-8 code unit is a leading byte and not ASCII.
@@ -93,8 +95,7 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  *
  * @return True if a leading byte and not ASCII, otherwise false.
  */
-[[nodiscard]] constexpr auto is_leading_multiple_bytes(
-    char8_t code_unit) noexcept -> bool {
+[[nodiscard]] constexpr auto is_leading_multiple_bytes(char8_t code_unit) noexcept -> bool {
     // NOLINTNEXTLINE(*-magic-numbers)
     return code_unit >= 0b1100'0000 && code_unit <= g_lastLeadingByte;
 }
@@ -120,7 +121,7 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  * @return True if a continuation byte, otherwise false
  */
 [[nodiscard]] constexpr auto is_continuation_byte(char8_t code_unit) noexcept -> bool {
-    return (code_unit & 0xC0U) == 0x80U; // NOLINT(*-magic-numbers)
+    return (code_unit & 0xC0U) == 0x80U;  // NOLINT(*-magic-numbers)
 }
 
 /**
@@ -143,38 +144,36 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  * @return True if the given code unit is an invalid UTF-8 character code unit
  * otherwise false
  */
-[[nodiscard]] constexpr auto is_invalid_byte(char8_t code_unit) noexcept -> bool {
-    return !is_valid_byte(code_unit);
-}
+[[nodiscard]] constexpr auto is_invalid_byte(char8_t code_unit) noexcept -> bool { return !is_valid_byte(code_unit); }
 
 /**
- * 
+ *
  *
  * @note Does not check for overlong encoding.
  */
 [[nodiscard]] constexpr auto is_leading_mb_2(char8_t code_unit) -> bool {
     // NOLINTNEXTLINE(*-magic-numbers)
-    return (code_unit & 0xE0U) == 0xC0U; // 110x xxxx
+    return (code_unit & 0xE0U) == 0xC0U;  // 110x xxxx
 }
 
 /**
- * 
+ *
  *
  * @note Does not check for overlong encoding.
  */
 [[nodiscard]] constexpr auto is_leading_mb_3(char8_t code_unit) -> bool {
     // NOLINTNEXTLINE(*-magic-numbers)
-    return (code_unit & 0xF0U) == 0xE0U; // 1110 xxxx
+    return (code_unit & 0xF0U) == 0xE0U;  // 1110 xxxx
 }
 
 /**
- * 
+ *
  *
  * @note Does not check for overlong encoding.
  */
 [[nodiscard]] constexpr auto is_leading_mb_4(char8_t code_unit) -> bool {
     // NOLINTNEXTLINE(*-magic-numbers)
-    return (code_unit & 0xF8U) == 0xF0U; // 1111 0xxx
+    return (code_unit & 0xF8U) == 0xF0U;  // 1111 0xxx
 }
 
 /**
@@ -189,13 +188,58 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  */
 [[nodiscard]] constexpr auto leading_byte_size(char8_t code_unit) -> std::int8_t {
     // NOLINTBEGIN(*-around-statements)
-    if (is_ascii(code_unit))        return 1;
+    if (is_ascii(code_unit)) return 1;
     if (is_leading_mb_2(code_unit)) return 2;
     if (is_leading_mb_3(code_unit)) return 3;
     if (is_leading_mb_4(code_unit)) return 4;
     // NOLINTEND(*-around-statements)
 
     throw beetle::exceptions::utf8::ExpectingLeadingByte{code_unit};
+}
+
+namespace internal {
+
+[[nodiscard]] constexpr std::int8_t impl_char_size_from_leading_byte(char8_t code_unit) noexcept {
+    // --std c++20 -O2
+    //
+    // return ((~(code_unit & 0x80)) >> 7) + std::countl_zero(static_cast<unsigned char>(~code_unit));
+    //
+    // return ((code_unit >> 7) ^ 0x1) + std::countl_zero(static_cast<unsigned char>(~code_unit));
+    //
+    // return std::countl_one(static_cast<unsigned char>(code_unit ^ 0x80)) + std::countl_zero(static_cast<unsigned
+    // char>(~code_unit));
+    //
+    return ((code_unit & 0x80) == 0x00) + std::countl_zero(static_cast<unsigned char>(~code_unit));
+}
+
+}  // namespace internal
+
+namespace unsafe {
+
+/**
+ * Returns the *possible* UTF-8 character size based on the given leading byte.
+ *
+ * @precondition The given UTF-8 code unit is a leading byte.
+ *
+ * @param code_unit
+ *
+ * return UTF-8 character size
+ */
+[[nodiscard]] constexpr std::int8_t char_size_from_leading_byte(char8_t code_unit) noexcept {
+    // TODO: Change to custom Beetle assert
+    assert(utf8::is_leading_byte(code_unit));
+
+    return utf8::internal::impl_char_size_from_leading_byte(code_unit);
+}
+
+}  // namespace unsafe
+
+[[nodiscard]] constexpr std::int8_t char_size_from_leading_byte(char8_t code_unit) {
+    if (!utf8::is_leading_byte(code_unit)) {
+        throw std::invalid_argument{"Error: Unexpected UTF-8 code unit. Expecting leading UTF-8 code unit byte."};
+    }
+
+    return utf8::internal::impl_char_size_from_leading_byte(code_unit);
 }
 
 /**
@@ -210,11 +254,11 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
  * @return The size of the UTF-8 character based on the code unit if valid,
  * otherwise std::nullopt.
  */
-[[nodiscard]] constexpr auto try_leading_byte_size(char8_t code_unit) noexcept -> std::optional<std::int8_t> {
-    if (is_leading_byte(code_unit)) [[likely]] {
-        return leading_byte_size(code_unit);
+[[nodiscard]] constexpr std::optional<std::int8_t> try_leading_byte_size(char8_t code_unit) noexcept {
+    if (is_leading_byte(code_unit)) {
+        return utf8::char_size_from_leading_byte(code_unit);
     }
-    
+
     return std::nullopt;
 }
 
@@ -234,7 +278,7 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
     if (is_leading_byte(code_unit)) [[likely]] {
         return leading_byte_size(code_unit);
     }
-    
+
     return std::nullopt;
 }
 
@@ -243,4 +287,3 @@ inline constexpr auto g_lastLeadingByte = char8_t{0b1111'0111};    // 1111 0xxx
 }  // namespace beetle::utf8
 
 #endif
-

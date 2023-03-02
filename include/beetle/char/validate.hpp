@@ -73,13 +73,17 @@ template <code_unit_input_iterator InputIt, std::sentinel_for<InputIt> Sentinel>
     }
 
     if (utf8::is_leading_mb_3(leading_byte)) {
+        auto const cont_byte = *std::ranges::next(first);
+
         // 1010 0000 is the lowest acceptable continuation byte value
-        return leading_byte == 0xE0U && (*(++first) & 0x3FU) < 0x20U;
+        return leading_byte == 0xE0U && (cont_byte & 0x3FU) < 0x20U;
     }
 
     if (utf8::is_leading_mb_4(leading_byte)) {
+        auto const cont_byte = *std::ranges::next(first);
+
         // 1001 0000 is the lowest acceptable continuation byte value
-        return leading_byte == 0xF0U && (*(++first) & 0x3FU) < 0x10U;
+        return leading_byte == 0xF0U && (cont_byte & 0x3FU) < 0x10U;
     }
 
     // TODO: Add throw or make better
