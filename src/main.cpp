@@ -4,6 +4,7 @@
 #include <iostream>
 
 // #include "beetle/code_unit.hpp"
+#include "beetle/utf8/algorithm.hpp"
 #include "beetle/version.hpp"
 #include "utf8/internal/dfa.hpp"
 

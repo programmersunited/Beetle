@@ -51,6 +51,11 @@ inline namespace cpp20_v1 {
     return code_unit < 0x80U;
 }
 
+[[nodiscard]] constexpr bool is_continuation_byte(char8_t code_unit) noexcept {
+    // 10xx xxxx
+    return (code_unit & 0xC0U) == 0x80U;
+}
+
 namespace unsafe {
 
 /**

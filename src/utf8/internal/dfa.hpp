@@ -486,6 +486,60 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     return g_ending_states[state];
 }
 
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    requires std::indirectly_copyable<Iterator, Output> &&
+             std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr State copy_and_advance_mb_forward_once(Iterator& first, Sentinel last, Output result) noexcept {
+    // TODO: Add assert for first != last
+    // TODO: Add assert to check if it's not ASCII
+
+    auto state = get_leading_byte_info(*first).next_state;
+    ++first;
+
+    while (first != last && can_advance(state)) {
+        auto const code_unit = *first;
+
+        *result = code_unit;
+        ++result;
+
+        state = advance_state(state, code_unit);
+        ++first;
+    }
+
+    return g_ending_states[state];
+}
+
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    requires std::indirectly_copyable<Iterator, Output> &&
+             std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr State copy_and_advance_mb_backward_once(Iterator& first, Sentinel last,
+                                                                Output result) noexcept {
+    // TODO: Add assert for first != last
+    // TODO: Add assert to check if it's not ASCII
+
+    auto const is_continuation_byte = (*first & 0xC0) == 0x80;
+
+    // TODO: Figure out if unlikely should be added here
+    if (!is_continuation_byte) {
+        return State::eErrCont;
+    }
+
+    auto state = State::eS1;
+    --first;
+
+    while (first != last && can_advance(state)) {
+        auto const code_unit = *first;
+
+        *result = code_unit;
+        ++result;
+
+        state = advance_state_backward(state, code_unit);
+        --first;
+    }
+
+    return g_ending_states[state];
+}
+
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
 [[nodiscard]] constexpr State advance_forward_once(Iterator& first, Sentinel last) noexcept {
@@ -553,6 +607,50 @@ template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sent
         --first;
     } else {
         ending_state = decode_and_advance_mb_backward_once(first, last, out_code_unit_32);
+    }
+
+    return ending_state;
+}
+
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    requires std::indirectly_copyable<Iterator, Output> &&
+             std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr State copy_and_advance_forward_once(Iterator& first, Sentinel last, Output result) noexcept {
+    // TODO: Add assert for first != last
+
+    auto ending_state = State::eAccept;
+
+    auto const leading_byte = *first;
+
+    if (is_ascii(leading_byte)) {
+        ++first;
+
+        *result = leading_byte;
+        ++result;
+    } else {
+        ending_state = copy_and_advance_mb_forward_once(first, last, result);
+    }
+
+    return ending_state;
+}
+
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    requires std::indirectly_copyable<Iterator, Output> &&
+             std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr State copy_and_advance_backward_once(Iterator& first, Sentinel last, Output result) noexcept {
+    // TODO: Add assert for first != last
+
+    auto ending_state = State::eAccept;
+
+    auto const leading_byte = *first;
+
+    if (is_ascii(leading_byte)) {
+        ++first;
+
+        *result = leading_byte;
+        ++result;
+    } else {
+        ending_state = copy_and_advance_mb_backward_once(first, last, result);
     }
 
     return ending_state;
