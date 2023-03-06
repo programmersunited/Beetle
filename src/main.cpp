@@ -5,6 +5,7 @@
 
 // #include "beetle/code_unit.hpp"
 #include "beetle/utf8/algorithm.hpp"
+#include "beetle/utf8/iterator.hpp"
 #include "beetle/version.hpp"
 #include "utf8/internal/dfa.hpp"
 
@@ -55,7 +56,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     // std::array<char8_t, 1> character = {0x84U};
 
     // Hwair - missing last byte
-    std::array<char8_t, 3> character = {0xF0U, 0x90U, 0x8DU};
+    // std::array<char8_t, 3> character = {0xF0U, 0x90U, 0x8DU};
 
     /*
     auto first = std::ranges::begin(character);
@@ -76,6 +77,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     auto state = beetle::utf8::internal::advance_backward_once(first, last);
     */
 
+    /*
     char32_t code_point{};
     auto first = std::ranges::prev(std::ranges::end(character));
     auto last = std::ranges::prev(std::ranges::begin(character));
@@ -92,6 +94,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     std::cout << "Is overlong encoded? " << std::boolalpha << (state == beetle::utf8::internal::State::eErrOvrlg)
               << '\n';
     std::cout << "Is missing bytes? " << std::boolalpha << (state == beetle::utf8::internal::State::eErrMiss) << '\n';
+    */
+
+    constexpr std::array<char8_t, 7> const chars = {0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
+
+    auto it = std::ranges::begin(chars);
+
+    auto next_it = beetle::utf8::unsafe::next(it);
+
+    std::cout << "0x" << std::hex << static_cast<int>(*next_it) << '\n';
 
     return EXIT_SUCCESS;
 }
