@@ -90,6 +90,14 @@ class DFA {
         eErrMiss
     };
 
+    /**
+     * Advances the given iterator forward over the UTF-8 character between [first, last).
+     *
+     * @param first The iterator to be advanced
+     * @param last  The sentinel denoting the end of the range first points to
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_forward_once(Iterator& first, Sentinel last) noexcept {
@@ -106,6 +114,17 @@ class DFA {
         return ending_state;
     }
 
+    /**
+     * Advances the given iterator over the reversed UTF-8 character between [first, last).
+     *
+     * @note This is designed to be used with an iterator or a free function to iterator over UTF-8 characters in
+     * reverse. This will allow for reverse searching while also validating the UTF-8 characters.
+     *
+     * @param first The iterator to be advanced
+     * @param last  The sentinel denoting the end of the range first points to
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_backward_once(Iterator& first, Sentinel last) noexcept {
@@ -122,6 +141,14 @@ class DFA {
         return ending_state;
     }
 
+    /**
+     * Advances the given iterator forward over the UTF-8 character between [first, last).
+     *
+     * @param first The iterator to be advanced
+     * @param last  The sentinel denoting the end of the range first points to
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_forward_once(Iterator& first, Sentinel last,

@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 project(Beetle
     VERSION 0.0.1
-    DESCRIPTION "A modern ISO C++20 UTF-8 library."
+    DESCRIPTION "A modern constexpr DFA-based ISO C++20 UTF-8 library."
     LANGUAGES CXX
 )
 
