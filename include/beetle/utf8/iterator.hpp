@@ -182,10 +182,10 @@ struct next_fn {
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] constexpr Iterator operator()(Iterator iterator) const {
         auto const possible_end = std::ranges::next(iterator, 4);
-        auto const ending_state = utf8::internal::advance_forward_once(iterator, possible_end);
+        auto const ending_state = utf8::internal::DFA::advance_forward_once(iterator, possible_end);
 
-        if (ending_state != utf8::internal::State::eAccept) {
-            throw beetle::make_error_condition(utf8::internal::ending_state_to_error(ending_state));
+        if (ending_state != utf8::internal::DFA::State::eAccept) {
+            throw utf8::internal::DFA::make_error_condition(ending_state);
         }
 
         return iterator;
@@ -223,10 +223,10 @@ struct prev_fn {
     [[nodiscard]] constexpr Iterator operator()(Iterator iterator) const {
         // Could point to leading byte or std::end(iterator)
         auto const possible_end = std::ranges::prev(iterator, 4);
-        auto const ending_state = utf8::internal::advance_backward_once(iterator, possible_end);
+        auto const ending_state = utf8::internal::DFA::advance_backward_once(iterator, possible_end);
 
-        if (ending_state != utf8::internal::State::eAccept) {
-            throw beetle::make_error_condition(utf8::internal::ending_state_to_error(ending_state));
+        if (ending_state != utf8::internal::DFA::State::eAccept) {
+            throw utf8::internal::DFA::make_error_condition(ending_state);
         }
 
         return iterator;

@@ -56,13 +56,13 @@ inline namespace cpp20_v1 {
 
 template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-[[nodiscard]] utf8::internal::State impl_safe_str_len(Iterator first, Sentinel last, beetle::ssize& length) {
+[[nodiscard]] utf8::internal::DFA::State impl_safe_str_len(Iterator first, Sentinel last, beetle::ssize& length) {
     length = 0;
 
     while (first != last && *first != '\0') {
-        auto state = utf8::internal::advance_forward_once(first, last);
+        auto state = utf8::internal::DFA::advance_forward_once(first, last);
 
-        if (state != utf8::internal::State::eAccept) {
+        if (state != utf8::internal::DFA::State::eAccept) {
             length = 0;
             return state;
         }
@@ -70,7 +70,7 @@ template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Se
         ++length;
     }
 
-    return utf8::internal::State::eAccept;
+    return DFA::State::eAccept;
 }
 
 }  // namespace cpp20_v1
@@ -119,10 +119,10 @@ template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Se
 [[nodiscard]] beetle::ssize str_len(Iterator first, Sentinel last, std::error_condition& condition) {
     beetle::ssize length{0};
 
-    auto state = utf8::internal::impl_safe_str_len(first, last, length);
+    auto const ending_state = utf8::internal::impl_safe_str_len(first, last, length);
 
-    if (state != utf8::internal::State::eAccept) {
-        condition = beetle::make_error_condition(utf8::internal::ending_state_to_error(state));
+    if (ending_state != utf8::internal::DFA::State::eAccept) {
+        condition = utf8::internal::DFA::make_error_condition(ending_state);
     }
 
     return length;
@@ -139,10 +139,10 @@ template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Se
 [[nodiscard]] constexpr beetle::ssize str_len(Iterator first, Sentinel last) {
     beetle::ssize length{0};
 
-    auto state = utf8::internal::impl_safe_str_len(first, last, length);
+    auto const ending_state = utf8::internal::impl_safe_str_len(first, last, length);
 
-    if (state != utf8::internal::State::eAccept) {
-        throw beetle::make_error_condition(utf8::internal::ending_state_to_error(state));
+    if (ending_state != utf8::internal::DFA::State::eAccept) {
+        throw utf8::internal::DFA::make_error_condition(ending_state);
     }
 
     return length;
@@ -170,9 +170,9 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
 [[nodiscard]] constexpr Iterator find_invalid(Iterator first, Sentinel last) {
     while (first != last) {
-        auto ending_state = utf8::internal::advance_forward_once(first, last);
+        auto const ending_state = utf8::internal::DFA::advance_forward_once(first, last);
 
-        if (ending_state != utf8::internal::State::eAccept) {
+        if (ending_state != utf8::internal::DFA::State::eAccept) {
             return first;
         }
     }
@@ -245,9 +245,9 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, st
 [[nodiscard]] constexpr utf8::decode_result<Iterator, Output> decode(Iterator first, Sentinel last, Output result) {
     while (first != last) {
         auto code_point = char32_t{0};
-        auto const ending_state = utf8::internal::decode_and_advance_forward_once(first, last, code_point);
+        auto const ending_state = utf8::internal::DFA::decode_and_advance_forward_once(first, last, code_point);
 
-        if (ending_state != utf8::internal::State::eAccept) {
+        if (ending_state != utf8::internal::DFA::State::eAccept) {
             break;
         }
 
@@ -282,9 +282,9 @@ constexpr utf8::sanitize_result<Iterator, Output> sanitize(Iterator first, Senti
 
     while (first != last) {
         auto const ending_state =
-            utf8::internal::copy_and_advance_forward_once(first, last, std::back_inserter(copied_char));
+            utf8::internal::DFA::copy_and_advance_forward_once(first, last, std::back_inserter(copied_char));
 
-        if (ending_state == utf8::internal::State::eAccept) {
+        if (ending_state == utf8::internal::DFA::State::eAccept) {
             std::ranges::copy(copied_char, result);
         } else {
             std::ranges::copy(replacement_char, result);
