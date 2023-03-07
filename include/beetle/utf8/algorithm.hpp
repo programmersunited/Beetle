@@ -157,11 +157,7 @@ template <std::ranges::input_range Range>
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
 [[nodiscard]] constexpr Iterator find_leading_byte(Iterator first, Sentinel last) {
-    auto is_leading_byte = [](char8_t code_unit) -> bool {
-        return utf8::internal::is_ascii(code_unit) || utf8::internal::is_valid_leading_byte(code_unit);
-    };
-
-    return std::ranges::find_if(first, last, is_leading_byte);
+    return std::ranges::find_if(first, last, utf8::internal::is_leading_byte);
 }
 
 template <std::ranges::input_range Range>

@@ -28,6 +28,8 @@
 #include <bit>
 #include <cstdint>
 
+#include "core/internal/assert.hpp"
+
 /**
  * Contains ways to inspect a single UTF-8 code unit.
  *
@@ -78,8 +80,7 @@ namespace unsafe {
  * return UTF-8 character size
  */
 [[nodiscard]] constexpr std::int8_t char_size_from_leading_byte(char8_t code_unit) noexcept {
-    // TODO: Change to custom Beetle assert
-    // assert(utf8::is_leading_byte(code_unit));
+    BEETLE_ASSERT(utf8::internal::is_leading_byte(code_unit));
 
     // --std c++20 -O2
     //

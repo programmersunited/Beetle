@@ -29,7 +29,8 @@
 #include <cstdint>
 
 #include "beetle/utf8/error.hpp"
-#include "code_unit.hpp"
+#include "core/internal/assert.hpp"
+#include "utf8/internal/code_unit.hpp"
 
 /**
  * The internal DFA implementation for validating and decoding UTF-8 forwards and backwards.
@@ -329,11 +330,6 @@ constexpr std::array<State, 12> g_ending_states = {
     // eAccept eErrLead eErrOvrlg eErrCont  eErrMiss
     eAccept, eErrLead, eErrOvrlg, eErrCont, eErrMiss};
 
-[[nodiscard]] constexpr bool is_valid_leading_byte(char8_t code_unit) noexcept {
-    // TODO: Decide if reordering char class would be better to enable one less than check
-    return code_unit >= 0xC2U && code_unit <= 0xF4U;
-}
-
 [[nodiscard]] constexpr LeadingByteInfo get_leading_byte_info(char8_t leading_byte) noexcept {
     return g_leading_byte_states[leading_byte - 0x80U];
 }
@@ -430,7 +426,7 @@ template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sent
 
     auto shift_amount = 6;
 
-    while (first != last && !is_valid_leading_byte(*first) && can_advance(state)) {
+    while (first != last && !is_mb_leading_byte(*first) && can_advance(state)) {
         auto const continuation_byte = *first;
 
         auto const decoded_byte = continuation_byte & 0x3FU;  // 10xx xxxx
@@ -444,7 +440,7 @@ template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sent
     }
 
     // Bad state or valid leading byte
-    if (can_advance(state) && is_valid_leading_byte(*first)) {
+    if (can_advance(state) && is_mb_leading_byte(*first)) {
         auto const leading_byte = *first;
         auto const leading_byte_data = get_leading_byte_info(leading_byte).data;
 
