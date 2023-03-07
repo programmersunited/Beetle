@@ -1,4 +1,4 @@
-# src/core/internal/CMakeLists.txt
+# src/utf8/internal/CMakeLists.txt
 
 #target_sources(Beetle
 #    PRIVATE
