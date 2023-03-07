@@ -51,6 +51,16 @@ inline namespace cpp20_v1 {
     return code_unit < 0x80U;
 }
 
+[[nodiscard]] constexpr bool is_mb_leading_byte(char8_t code_unit) noexcept {
+    // TODO: Decide if reordering char class would be better to enable one less than check
+    // 0xC0 and 0C1 are overlong encoded leading bytes
+    return code_unit >= 0xC2U && code_unit <= 0xF4U;
+}
+
+[[nodiscard]] constexpr bool is_leading_byte(char8_t code_unit) noexcept {
+    return is_ascii(code_unit) || is_mb_leading_byte(code_unit);
+}
+
 [[nodiscard]] constexpr bool is_continuation_byte(char8_t code_unit) noexcept {
     // 10xx xxxx
     return (code_unit & 0xC0U) == 0x80U;

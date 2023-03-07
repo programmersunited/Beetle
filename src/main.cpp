@@ -1,4 +1,5 @@
 #include <array>
+#include <cassert>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
@@ -7,6 +8,7 @@
 #include "beetle/utf8/algorithm.hpp"
 #include "beetle/utf8/iterator.hpp"
 #include "beetle/version.hpp"
+#include "core/internal/assert.hpp"
 #include "utf8/internal/dfa.hpp"
 
 void usage() {
@@ -26,7 +28,26 @@ void parse_command_line(int argc, [[maybe_unused]] char** argv) {
     // TODO(programmersunited): Implement after library is done.
 }
 
+constexpr int test(int value) {
+    // BEETLE_ASSERT(value != 20, "This is a test!");
+    BEETLE_ASSERT(value != 20);
+
+    return value;
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
+    auto const value = test(20);
+    // constexpr auto const value = test(21);
+
+    std::cout << value;
+
+    // BEETLE_ASSERT(1 > 5, "This is a test!");
+    //  BEETLE_ASSERT(1 > 5);
+
+#ifdef BEETLE_DEBUG
+    std::cout << "Beetle is set to debug mode!\n";
+#endif
+
     // TODO(programmersunited): Uncomment and implement after library is done.
     // parse_command_line(argc, argv);
 

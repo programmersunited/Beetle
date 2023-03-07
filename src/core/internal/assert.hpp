@@ -22,12 +22,14 @@
  * SOFTWARE.
  */
 
-#ifndef BEETLE_INTERNAL_ASSERT_HPP
-#define BEETLE_INTERNAL_ASSERT_HPP
+#ifndef BEETLE_CORE_INTERNAL_ASSERT_HPP
+#define BEETLE_CORE_INTERNAL_ASSERT_HPP
 
 #include <optional>
 #include <source_location>
 #include <string_view>
+
+#include "core/internal/macro_helpers.hpp"
 
 /**
  * @file assert.hpp
@@ -38,11 +40,41 @@ namespace beetle::internal {
 // NOLINTNEXTLINE(readability-identifier-naming)
 inline namespace cpp20_v1 {
 
-void assertion(bool condition, std::optional<std::string_view> message = std::nullopt,
-               std::source_location location = std::source_location::current());
+[[nodiscard]] std::string create_error_message(std::string_view assertion_text,
+                                               std::optional<std::string_view> message = std::nullopt,
+                                               std::source_location const location = std::source_location::current());
+
+struct assertion_failure {
+    explicit assertion_failure(std::string_view assertion_text, std::optional<std::string_view> message = std::nullopt,
+                               std::source_location const location = std::source_location::current());
+};
+
+inline constexpr auto assertion(bool condition, std::string_view assertion_text,
+                                std::optional<std::string_view> message = std::nullopt,
+                                std::source_location const location = std::source_location::current()) {
+    if (!condition) {
+        throw assertion_failure{assertion_text, message, location};
+    }
+}
 
 }  // namespace cpp20_v1
 
 }  // namespace beetle::internal
+
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+
+#ifdef BEETLE_DEBUG
+
+#define BEETLE_ASSERT_2(ASSERTION, MESSAGE) \
+    beetle::internal::assertion(ASSERTION, BEETLE_STR(ASSERTION), MESSAGE, std::source_location::current());
+
+#define BEETLE_ASSERT_1(ASSERTION) BEETLE_ASSERT_2(ASSERTION, std::nullopt)
+
+#define BEETLE_ASSERT(...) BEETLE_VA_SELECT(BEETLE_ASSERT, __VA_ARGS__)
+#else
+#define BEETLE_ASSERT(...)
+#endif
+
+// NOLINTEND(cppcoreguidelines-macro-usage)
 
 #endif
