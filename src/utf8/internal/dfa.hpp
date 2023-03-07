@@ -270,7 +270,7 @@ class DFA {
             ++first;
         }
 
-        return TableData::ending_states[state];
+        return get_ending_state(state);
     }
 
     template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>

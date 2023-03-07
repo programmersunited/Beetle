@@ -28,26 +28,7 @@ void parse_command_line(int argc, [[maybe_unused]] char** argv) {
     // TODO(programmersunited): Implement after library is done.
 }
 
-constexpr int test(int value) {
-    // BEETLE_ASSERT(value != 20, "This is a test!");
-    BEETLE_ASSERT(value != 20);
-
-    return value;
-}
-
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
-    auto const value = test(20);
-    // constexpr auto const value = test(21);
-
-    std::cout << value;
-
-    // BEETLE_ASSERT(1 > 5, "This is a test!");
-    //  BEETLE_ASSERT(1 > 5);
-
-#ifdef BEETLE_DEBUG
-    std::cout << "Beetle is set to debug mode!\n";
-#endif
-
     // TODO(programmersunited): Uncomment and implement after library is done.
     // parse_command_line(argc, argv);
 
@@ -64,7 +45,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     // std::array<char8_t, 3> character = {0xE2U, 0x82U, 0xACU};
 
     // Hangul Syllables
-    // std::array<char8_t, 3> character = {0xEDU, 0x95U, 0x9CU};
+    std::array<char8_t, 3> character = {0xEDU, 0x95U, 0x9CU};
 
     // Hwair
     // std::array<char8_t, 4> character = {0xF0U, 0x90U, 0x8DU, 0x88U};
@@ -79,10 +60,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     // Hwair - missing last byte
     // std::array<char8_t, 3> character = {0xF0U, 0x90U, 0x8DU};
 
-    /*
     auto first = std::ranges::begin(character);
-    auto state = beetle::utf8::internal::advance_forward_once(first, std::ranges::end(character));
-    */
+    auto state = beetle::utf8::internal::DFA::advance_forward_once(first, std::ranges::end(character));
 
     /*
     char32_t code_point{};
@@ -96,34 +75,37 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     auto first = std::ranges::prev(std::ranges::end(character));
     auto last = std::ranges::prev(std::ranges::begin(character));
     auto state = beetle::utf8::internal::advance_backward_once(first, last);
-    */
 
-    /*
     char32_t code_point{};
     auto first = std::ranges::prev(std::ranges::end(character));
     auto last = std::ranges::prev(std::ranges::begin(character));
     auto state = beetle::utf8::internal::decode_and_advance_backward_once(first, last, code_point);
+    */
 
-    if (state == beetle::utf8::internal::State::eAccept) {
+    if (state == beetle::utf8::internal::DFA::State::eAccept) {
         std::cout << "Success!\n";
-        std::cout << "0x" << std::hex << std::setw(8) << std::setfill('0') << static_cast<std::uint32_t>(code_point)
-                  << '\n';
+        /*
+            std::cout << "0x" << std::hex << std::setw(8) << std::setfill('0') << static_cast<std::uint32_t>(code_point)
+                      << '\n';
+        */
     } else {
         std::cout << "Failed!\n";
     }
 
-    std::cout << "Is overlong encoded? " << std::boolalpha << (state == beetle::utf8::internal::State::eErrOvrlg)
+    std::cout << "Is overlong encoded? " << std::boolalpha << (state == beetle::utf8::internal::DFA::State::eErrOvrlg)
               << '\n';
-    std::cout << "Is missing bytes? " << std::boolalpha << (state == beetle::utf8::internal::State::eErrMiss) << '\n';
+    std::cout << "Is missing bytes? " << std::boolalpha << (state == beetle::utf8::internal::DFA::State::eErrMiss)
+              << '\n';
+
+    /*
+constexpr std::array<char8_t, 7> const chars = {0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
+
+auto it = std::ranges::begin(chars);
+
+auto next_it = beetle::utf8::unsafe::next(it);
+
+std::cout << "0x" << std::hex << static_cast<int>(*next_it) << '\n';
     */
-
-    constexpr std::array<char8_t, 7> const chars = {0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
-
-    auto it = std::ranges::begin(chars);
-
-    auto next_it = beetle::utf8::unsafe::next(it);
-
-    std::cout << "0x" << std::hex << static_cast<int>(*next_it) << '\n';
 
     return EXIT_SUCCESS;
 }
