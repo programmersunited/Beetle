@@ -56,7 +56,8 @@ inline namespace cpp20_v1 {
 
 template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-[[nodiscard]] utf8::internal::DFA::State impl_safe_str_len(Iterator first, Sentinel last, beetle::ssize& length) {
+[[nodiscard]] constexpr utf8::internal::DFA::State impl_safe_str_len(Iterator first, Sentinel last,
+                                                                     beetle::ssize& length) {
     length = 0;
 
     while (first != last && *first != '\0') {
@@ -188,13 +189,24 @@ template <std::ranges::input_range Range>
 
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-[[nodiscard]] constexpr Iterator is_valid(Iterator first, Sentinel last) {
-    return utf8::find_invalid(first, last) != last;
+[[nodiscard]] constexpr bool is_valid(Iterator first, Sentinel last) {
+    auto is_valid = true;
+
+    while (first != last) {
+        auto const ending_state = utf8::internal::DFA::advance_forward_once(first, last);
+
+        if (ending_state != utf8::internal::DFA::State::eAccept) {
+            is_valid = false;
+            break;
+        }
+    }
+
+    return is_valid;
 }
 
 template <std::ranges::input_range Range>
     requires std::convertible_to<std::ranges::range_value_t<Range>, char8_t>
-[[nodiscard]] constexpr std::ranges::borrowed_iterator_t<Range> is_valid(Range&& range) {
+[[nodiscard]] constexpr bool is_valid(Range&& range) {
     return utf8::is_valid(std::ranges::begin(range), std::ranges::end(range));
 }
 

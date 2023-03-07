@@ -51,13 +51,15 @@ class Unicode {
 
     constexpr Unicode() noexcept = default;
 
-    constexpr Unicode(value_type value) : m_data{Unicode::validate(value)} {}
+    constexpr Unicode(value_type value) : m_data{validate_construct(value)} {}
 
-    [[nodiscard]] auto operator<=>(Unicode const&) const noexcept = default;
+    [[nodiscard]] constexpr auto operator<=>(Unicode const&) const noexcept = default;
 
-    [[nodiscard]] std::strong_ordering operator<=>(value_type value) const noexcept { return value <=> this->m_data; }
+    [[nodiscard]] constexpr std::strong_ordering operator<=>(value_type value) const noexcept {
+        return value <=> this->m_data;
+    }
 
-    Unicode& operator=(value_type other) {
+    constexpr Unicode& operator=(value_type other) {
         this->m_data = Unicode::validate(other);
 
         return *this;
@@ -71,7 +73,7 @@ class Unicode {
         return std::nullopt;
     }
 
-    [[nodiscard]] static constexpr bool is_valid(std::integral auto value) noexcept { return value <= 0x10FFFF; }
+    [[nodiscard]] static constexpr bool is_valid(std::integral auto value) noexcept { return value <= 0x10FFFFU; }
 
     template <typename IntegerType>
         requires std::integral<IntegerType>
@@ -86,8 +88,12 @@ class Unicode {
 
     [[noreturn]] static value_type throw_unicode_error() { throw std::invalid_argument{"Invalid Unicode value."}; }
 
+    [[nodiscard]] static constexpr value_type validate_construct(value_type value) {
+        return value <= 0x10FFFFU ? value : throw std::invalid_argument{"Invalid Unicode value."};
+    }
+
     [[nodiscard]] static constexpr value_type validate(std::integral auto value) {
-        return Unicode::is_valid(value) ? value : Unicode::throw_unicode_error();
+        return value <= 0x10FFFFU ? value : throw std::invalid_argument{"Invalid Unicode value."};
     }
 };
 
@@ -96,7 +102,8 @@ class Unicode {
         return Unicode{NoUnicodeValidation{}, static_cast<Unicode::value_type>(unicode_value)};
     }
 
-    Unicode::throw_unicode_error();
+    throw std::invalid_argument{"Invalid Unicode value."};
+    // Unicode::throw_unicode_error();
 }
 
 template <typename IntegerType>

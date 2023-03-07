@@ -1,17 +1,12 @@
 #include <array>
-#include <cassert>
-#include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <string>
 
-// #include "beetle/code_unit.hpp"
-#include "beetle/utf8/algorithm.hpp"
-#include "beetle/utf8/iterator.hpp"
-#include "beetle/version.hpp"
-#include "core/internal/assert.hpp"
-#include "utf8/internal/dfa.hpp"
+#include "beetle/beetle.hpp"
 
 void usage() {
+    // TODO: Finish usage after library is done.
     std::cout << "Beetle Version " << beetle::version_string << '\n';
     std::cout << "A simple utility to encode, decode and verify UTF-8.\n";
     std::cout << "Usage: beetle [OPTION]... [FILE]...\n";
@@ -25,84 +20,56 @@ void parse_command_line(int argc, [[maybe_unused]] char** argv) {
     }
 
     // Parse arguments here...
-    // TODO(programmersunited): Implement after library is done.
+    // TODO: Implement after library is done.
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
-    // TODO(programmersunited): Uncomment and implement after library is done.
+    // TODO: Implement after library is done.
     // parse_command_line(argc, argv);
 
-    // Dollar sign
-    // std::array<char8_t, 1> character = {0x24U};
+    static constexpr auto const u8_str = std::array<char8_t, 7>{0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
 
-    // Pound sign
-    // std::array<char8_t, 2> character = {0xC2U, 0xA3U};
+    static constexpr auto const u8_hangul_syllables = std::u8string_view{u8_str.data(), 3};
+    static constexpr auto const u8_hwair =
+        std::u8string_view{std::ranges::next(std::ranges::begin(u8_str), 3), std::ranges::end(u8_str)};
 
-    // Devanagari
-    // std::array<char8_t, 3> character = {0xE0U, 0xA4U, 0xB9U};
+    // ================================================= VALIDATING ================================================= //
 
-    // Euro sign
-    // std::array<char8_t, 3> character = {0xE2U, 0x82U, 0xACU};
+    static_assert(beetle::utf8::is_valid(u8_str));
+    static_assert(!beetle::utf8::is_valid(std::ranges::begin(u8_str), std::ranges::prev(std::ranges::end(u8_str))));
 
-    // Hangul Syllables
-    // std::array<char8_t, 3> character = {0xEDU, 0x95U, 0x9CU};
+    static_assert(beetle::utf8::find_invalid(u8_str) == std::ranges::end(u8_str));
 
-    // Hwair
-    // std::array<char8_t, 4> character = {0xF0U, 0x90U, 0x8DU, 0x88U};
+    // ================================================= INSPECTING ================================================= //
 
-    // Overlong encoding for euro sign
-    // std::array<char8_t, 4> character = {0xF0U, 0x82U, 0x82U, 0xACU};
+    static_assert(beetle::utf8::str_len(u8_str) == 2);
+    static_assert(beetle::utf8::str_len(u8_hangul_syllables) == 1);
+    static_assert(beetle::utf8::str_len(u8_hwair) == 1);
 
-    // std::array<char8_t, 4> character = {0xEDU, 0x07U, 0x82U, 0xACU};
+    // ================================================= ITERATING ================================================== //
 
-    // std::array<char8_t, 1> character = {0x84U};
+    static constexpr auto const str_begin = std::ranges::begin(u8_str);
 
-    // Hwair - missing last byte
-    // std::array<char8_t, 3> character = {0xF0U, 0x90U, 0x8DU};
+    static constexpr auto const next_it = beetle::utf8::next(str_begin);
+    static constexpr auto const prev_it = beetle::utf8::prev(next_it);
 
-    /*
-    auto first = std::ranges::begin(character);
-    auto state = beetle::utf8::internal::DFA::advance_forward_once(first, std::ranges::end(character));
+    static_assert(*next_it == 0xF0U);
+    static_assert(*prev_it == *str_begin);
 
-    char32_t code_point{};
-    auto first = std::ranges::begin(character);
-    auto state =
-        beetle::utf8::internal::decode_and_advance_forward_once(first, std::ranges::end(character), code_point);
-    */
+    // ================================================== ENCODING ================================================== //
 
-    /*
-    // For reverse
-    auto first = std::ranges::prev(std::ranges::end(character));
-    auto last = std::ranges::prev(std::ranges::begin(character));
-    auto state = beetle::utf8::internal::DFA::advance_backward_once(first, last);
+    static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
 
-    char32_t code_point{};
-    auto first = std::ranges::prev(std::ranges::end(character));
-    auto last = std::ranges::prev(std::ranges::begin(character));
-    auto state = beetle::utf8::internal::DFA::decode_and_advance_backward_once(first, last, code_point);
+    static constexpr auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
+    beetle::utf8::encode(hangul_syllables, std::ranges::begin(encoded_hangul_syllables));
 
-    if (state == beetle::utf8::internal::DFA::State::eAccept) {
-        std::cout << "Success!\n";
-        std::cout << "0x" << std::hex << std::setw(8) << std::setfill('0') << static_cast<std::uint32_t>(code_point)
-                  << '\n';
-    } else {
-        std::cout << "Failed!\n";
-    }
+    // ================================================== DECODING ================================================== //
 
-    std::cout << "Is overlong encoded? " << std::boolalpha << (state == beetle::utf8::internal::DFA::State::eErrOvrlg)
-              << '\n';
-    std::cout << "Is missing bytes? " << std::boolalpha << (state == beetle::utf8::internal::DFA::State::eErrMiss)
-              << '\n';
+    // constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
 
-    */
-    // constexpr std::array<char8_t, 7> const chars = {0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
-    constexpr std::array<char8_t, 7> const chars = {0xEDU, 0x05U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
-
-    auto it = std::ranges::begin(chars);
-
-    auto next_it = beetle::utf8::next(it);
-
-    std::cout << "0x" << std::hex << static_cast<int>(*next_it) << '\n';
+    // Advance over the first character and stop at the next byte of the next character
+    // static_assert(*beetle::utf8::next(std::ranges::begin(u8_chars)) == 0xF0U);
+    // static_assert(*beetle::utf8::next(std::ranges::begin(u8_chars)) == 0xF0U);
 
     return EXIT_SUCCESS;
 }
