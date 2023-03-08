@@ -178,31 +178,14 @@ struct prev_fn;
 struct advance_fn;
 
 struct next_fn {
-    template <std::input_or_output_iterator Iterator>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] constexpr Iterator operator()(Iterator iterator) const {
-        auto const possible_end = std::ranges::next(iterator, 4);
-        auto const ending_state = utf8::internal::DFA::advance_forward_once(iterator, possible_end);
+    [[nodiscard]] constexpr Iterator operator()(Iterator iterator, Sentinel bound) const {
+        auto const ending_state = utf8::internal::DFA::advance_forward_once(iterator, bound);
 
         if (ending_state != utf8::internal::DFA::State::eAccept) {
             throw utf8::internal::DFA::make_error_condition(ending_state);
         }
-
-        return iterator;
-    }
-
-    template <std::input_or_output_iterator Iterator>
-        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] constexpr Iterator operator()(Iterator iterator, std::iter_difference_t<Iterator> num) const {
-        utf8::advance_fn(iterator, num);
-
-        return iterator;
-    }
-
-    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
-        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] constexpr Iterator operator()(Iterator iterator, Sentinel bound) const {
-        utf8::advance_fn(iterator, bound);
 
         return iterator;
     }
@@ -220,22 +203,16 @@ struct next_fn {
 struct prev_fn {
     template <std::bidirectional_iterator Iterator>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] constexpr Iterator operator()(Iterator iterator) const {
+    [[nodiscard]] constexpr Iterator operator()(Iterator iterator, Iterator bound) const {
         // Could point to leading byte or std::end(iterator)
-        auto const possible_end = std::ranges::prev(iterator, 4);
-        auto const ending_state = utf8::internal::DFA::advance_backward_once(iterator, possible_end);
+        // Needs to point at the end of a possible UTF-8 character
+        --iterator;
+
+        auto const ending_state = utf8::internal::DFA::advance_backward_once(iterator, bound);
 
         if (ending_state != utf8::internal::DFA::State::eAccept) {
             throw utf8::internal::DFA::make_error_condition(ending_state);
         }
-
-        return iterator;
-    }
-
-    template <std::bidirectional_iterator Iterator>
-        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] constexpr Iterator operator()(Iterator iterator, std::iter_difference_t<Iterator> num) const {
-        utf8::advance_fn(iterator, -num);
 
         return iterator;
     }
@@ -251,27 +228,11 @@ struct prev_fn {
 };
 
 struct advance_fn {
-    template <std::input_or_output_iterator Iterator>
-        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    constexpr void operator()(Iterator& iterator, std::iter_difference_t<Iterator> num) const {
-        while (num > 0) {
-            --num;
-            iterator = utf8::next_fn(iterator);
-        }
-
-        if constexpr (std::bidirectional_iterator<Iterator>) {
-            while (num < 0) {
-                ++num;
-                iterator = utf8::prev_fn(iterator);
-            }
-        }
-    }
-
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     constexpr void operator()(Iterator& iterator, Sentinel bound) const {
         while (iterator != bound) {
-            iterator = utf8::next_fn(iterator);
+            iterator = utf8::next_fn(iterator, bound);
         }
     }
 
@@ -281,13 +242,13 @@ struct advance_fn {
                                                           Sentinel bound) const {
         while (num > 0 && iterator != bound) {
             --num;
-            iterator = utf8::next_fn(iterator);
+            iterator = utf8::next_fn(iterator, bound);
         }
 
         if constexpr (std::bidirectional_iterator<Iterator>) {
             while (num < 0 && iterator != bound) {
                 ++num;
-                iterator = utf8::prev_fn(iterator);
+                iterator = utf8::prev_fn(iterator, bound);
             }
         }
 

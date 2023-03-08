@@ -29,39 +29,43 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
     static constexpr auto const u8_str = std::array<char8_t, 7>{0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
 
+    static constexpr auto const u8_str_begin = std::ranges::begin(u8_str);
+    static constexpr auto const u8_str_end = std::ranges::end(u8_str);
+
     static constexpr auto const u8_hangul_syllables = std::u8string_view{u8_str.data(), 3};
-    static constexpr auto const u8_hwair =
-        std::u8string_view{std::ranges::next(std::ranges::begin(u8_str), 3), std::ranges::end(u8_str)};
+    static constexpr auto const u8_hwair = std::u8string_view{std::ranges::next(u8_str_begin, 3), u8_str_end};
+
+    namespace utf8 = beetle::utf8;
 
     // ================================================= VALIDATING ================================================= //
 
-    static_assert(beetle::utf8::is_valid(u8_str));
-    static_assert(!beetle::utf8::is_valid(std::ranges::begin(u8_str), std::ranges::prev(std::ranges::end(u8_str))));
+    static_assert(utf8::is_valid(u8_str));
+    static_assert(!utf8::is_valid(u8_str_begin, std::ranges::prev(u8_str_end)));
 
-    static_assert(beetle::utf8::find_invalid(u8_str) == std::ranges::end(u8_str));
+    static_assert(utf8::find_invalid(u8_str) == u8_str_end);
 
     // ================================================= INSPECTING ================================================= //
 
-    static_assert(beetle::utf8::str_len(u8_str) == 2);
-    static_assert(beetle::utf8::str_len(u8_hangul_syllables) == 1);
-    static_assert(beetle::utf8::str_len(u8_hwair) == 1);
+    static_assert(utf8::str_len(u8_str) == 2);
+    static_assert(utf8::str_len(u8_hangul_syllables) == 1);
+    static_assert(utf8::str_len(u8_hwair) == 1);
 
     // ================================================= ITERATING ================================================== //
 
-    static constexpr auto const str_begin = std::ranges::begin(u8_str);
-
-    static constexpr auto const next_it = beetle::utf8::next(str_begin);
-    static constexpr auto const prev_it = beetle::utf8::prev(next_it);
-
+    static constexpr auto const next_it = utf8::next(u8_str_begin, u8_str_end);
     static_assert(*next_it == 0xF0U);
-    static_assert(*prev_it == *str_begin);
+
+    static constexpr auto const prev_it = utf8::prev(next_it, u8_str_end);
+    static_assert(*prev_it == *u8_str_begin);
 
     // ================================================== ENCODING ================================================== //
 
-    static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
+    // static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
 
-    static constexpr auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
-    beetle::utf8::encode(hangul_syllables, std::ranges::begin(encoded_hangul_syllables));
+    /*
+    constexpr auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
+    utf8::encode(hangul_syllables, std::ranges::begin(encoded_hangul_syllables));
+    */
 
     // ================================================== DECODING ================================================== //
 

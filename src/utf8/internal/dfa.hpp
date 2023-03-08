@@ -98,7 +98,7 @@ class DFA {
      *
      * @return The ending state of the iterator's advancement
      */
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_forward_once(Iterator& first, Sentinel last) noexcept {
         BEETLE_ASSERT(first != last);
@@ -149,7 +149,7 @@ class DFA {
      *
      * @return The ending state of the iterator's advancement
      */
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_forward_once(Iterator& first, Sentinel last,
                                                                          char32_t& out_code_unit_32) noexcept {
@@ -189,7 +189,8 @@ class DFA {
         return ending_state;
     }
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
+              std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
                  std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State copy_and_advance_forward_once(Iterator& first, Sentinel last,
@@ -212,7 +213,8 @@ class DFA {
         return ending_state;
     }
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
+              std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
                  std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State copy_and_advance_backward_once(Iterator& first, Sentinel last,
@@ -281,7 +283,7 @@ class DFA {
 
     // ================================================== ADVANCING ================================================= //
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_mb_forward_once(Iterator& first, Sentinel last) noexcept {
         BEETLE_ASSERT(first != last);
@@ -320,6 +322,12 @@ class DFA {
             auto const code_unit = *first;
 
             state = advance_state_backward(state, code_unit);
+
+            // Found leading byte or illegal character (next state is either accepted or an error state)
+            if (!utf8::internal::is_continuation_byte(code_unit)) {
+                break;
+            }
+
             --first;
         }
 
@@ -378,7 +386,7 @@ class DFA {
         return get_ending_state(state);
     }
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_mb_forward_once(Iterator& first, Sentinel last,
                                                                             char32_t& out_code_unit_32) noexcept {
@@ -409,7 +417,8 @@ class DFA {
 
     // =========================================== COPYING AND ADVANCING ============================================ //
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
+              std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
                  std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State copy_and_advance_mb_forward_once(Iterator& first, Sentinel last,
@@ -433,7 +442,8 @@ class DFA {
         return get_ending_state(state);
     }
 
-    template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
+    template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
+              std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
                  std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State copy_and_advance_mb_backward_once(Iterator& first, Sentinel last,
