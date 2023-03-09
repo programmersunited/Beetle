@@ -1,5 +1,4 @@
-<h1 align="center">Beetle</h1>
-<p align="center">A DFA-based UTF-8 library written in modern constexpr ISO C++20</p>
+# Beetle
 
 ## Summary
 
