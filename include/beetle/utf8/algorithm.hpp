@@ -251,6 +251,30 @@ constexpr void encode(beetle::Unicode code_point, Output result) {
     }
 }
 
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr beetle::Unicode decode_and_advance(Iterator& first, Sentinel last) {
+    auto code_point = char32_t{0};
+    auto const ending_state = utf8::internal::DFA::decode_and_advance_forward_once(first, last, code_point);
+
+    if (ending_state != utf8::internal::DFA::State::eAccept) {
+        throw utf8::internal::DFA::make_error_condition(ending_state);
+    }
+
+    return beetle::Unicode{static_cast<Unicode::value_type>(code_point)};
+}
+
+template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+    requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+[[nodiscard]] constexpr beetle::Unicode decode(Iterator first, Sentinel last) {
+    return utf8::decode_and_advance(first, last);
+}
+
+template <std::ranges::input_range Range>
+[[nodiscard]] constexpr beetle::Unicode decode(Range&& range) {
+    return utf8::decode(std::ranges::begin(range), std::ranges::end(range));
+}
+
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t> &&
              std::convertible_to<typename std::iter_value_t<Output>, beetle::Unicode>

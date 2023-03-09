@@ -56,7 +56,7 @@ class Unicode {
     [[nodiscard]] constexpr auto operator<=>(Unicode const&) const noexcept = default;
 
     [[nodiscard]] constexpr std::strong_ordering operator<=>(value_type value) const noexcept {
-        return value <=> this->m_data;
+        return this->m_data <=> value;
     }
 
     constexpr Unicode& operator=(value_type other) {

@@ -60,20 +60,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
     // ================================================== ENCODING ================================================== //
 
-    // static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
+    static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
 
-    /*
-    constexpr auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
+    auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
     utf8::encode(hangul_syllables, std::ranges::begin(encoded_hangul_syllables));
-    */
 
     // ================================================== DECODING ================================================== //
 
-    // constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
+    static constexpr auto const decoded_hangul_syllables = utf8::decode(u8_hangul_syllables);
 
-    // Advance over the first character and stop at the next byte of the next character
-    // static_assert(*beetle::utf8::next(std::ranges::begin(u8_chars)) == 0xF0U);
-    // static_assert(*beetle::utf8::next(std::ranges::begin(u8_chars)) == 0xF0U);
+    static_assert(hangul_syllables == decoded_hangul_syllables);
 
     return EXIT_SUCCESS;
 }
