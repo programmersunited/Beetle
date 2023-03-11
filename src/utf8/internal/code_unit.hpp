@@ -31,7 +31,7 @@
 #include "core/internal/assert.hpp"
 
 /**
- * Contains ways to inspect a single UTF-8 code unit.
+ * Inspect and transform a single UTF-8 code unit.
  *
  * @file code_unit.hpp
  */
@@ -42,7 +42,7 @@ namespace beetle::utf8::internal {
 inline namespace cpp20_v1 {
 
 /**
- * Checks if the given code unit is ASCII.
+ * Check if the given code unit is ASCII.
  *
  * @param code_unit The code unit to check
  *
@@ -53,22 +53,54 @@ inline namespace cpp20_v1 {
     return code_unit < 0x80U;
 }
 
+/**
+ * Check if the given code unit is a valid leading byte of a multi-byte UTF-8 character.
+ *
+ * @note 0xC0 and 0C1 are overlong encoded leading bytes. This will also return false for these two values.
+ *
+ * @param code_unit The UTF-8 code unit to check
+ *
+ * @return True if a leading byte of a multi-byte UTF-8 character otherwise false
+ */
 [[nodiscard]] constexpr bool is_mb_leading_byte(char8_t code_unit) noexcept {
-    // TODO: Decide if reordering char class would be better to enable one less than check
-    // 0xC0 and 0C1 are overlong encoded leading bytes
     return code_unit >= 0xC2U && code_unit <= 0xF4U;
 }
 
+/**
+ * Check if the given code unit is a valid leading byte of a UTF-8 character.
+ *
+ * @param code_unit The UTF-8 code unit to check
+ *
+ * @return True if leading byte, otherwise false
+ */
 [[nodiscard]] constexpr bool is_leading_byte(char8_t code_unit) noexcept {
     return is_ascii(code_unit) || is_mb_leading_byte(code_unit);
 }
 
+/**
+ * Check if the given code unit is a continuation byte.
+ *
+ * @param code_unit
+ *
+ * @return True if continuation byte, otherwise false
+ */
 [[nodiscard]] constexpr bool is_continuation_byte(char8_t code_unit) noexcept {
     // 10xx xxxx
     return (code_unit & 0xC0U) == 0x80U;
 }
 
+/**
+ * Decode the given UTF-8 continuation byte.
+ *
+ * @note An encoded continuation byte has the format: 10xx xxxx
+ *
+ * @param continuation_byte The continuation byte to decode
+ *
+ * @return 00xx xxxx
+ */
 [[nodiscard]] constexpr char8_t decode_continuation_byte(char8_t continuation_byte) noexcept {
+    BEETLE_ASSERT(is_continuation_byte(continuation_byte));
+
     // 10xx xxxx
     return continuation_byte & 0x3FU;
 }
@@ -76,9 +108,9 @@ inline namespace cpp20_v1 {
 namespace unsafe {
 
 /**
- * Returns the *possible* UTF-8 character size based on the given leading byte.
+ * Return the *possible* UTF-8 character size based on the given leading byte.
  *
- * @precondition The given UTF-8 code unit is a leading byte.
+ * @note Undefined behavior if the given UTF-8 code unit is a leading byte.
  *
  * @param code_unit
  *
@@ -86,16 +118,6 @@ namespace unsafe {
  */
 [[nodiscard]] constexpr std::int8_t char_size_from_leading_byte(char8_t code_unit) noexcept {
     BEETLE_ASSERT(utf8::internal::is_leading_byte(code_unit));
-
-    // --std c++20 -O2
-    //
-    // return ((~(code_unit & 0x80)) >> 7) + std::countl_zero(static_cast<unsigned char>(~code_unit));
-    //
-    // return ((code_unit >> 7) ^ 0x1) + std::countl_zero(static_cast<unsigned char>(~code_unit));
-    //
-    // return std::countl_one(static_cast<unsigned char>(code_unit ^ 0x80)) + std::countl_zero(static_cast<unsigned
-    // char>(~code_unit));
-    //
 
     return static_cast<std::int8_t>(is_ascii(code_unit) + std::countl_zero(static_cast<unsigned char>(~code_unit)));
 }
