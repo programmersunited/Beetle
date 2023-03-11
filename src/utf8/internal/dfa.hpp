@@ -91,10 +91,10 @@ class DFA {
     };
 
     /**
-     * Advances the given iterator forward over the UTF-8 character between [first, last).
+     * Advance the given iterator forward over the UTF-8 character between [first, last).
      *
-     * @param first The iterator to be advanced
-     * @param last  The sentinel denoting the end of the range first points to
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
      *
      * @return The ending state of the iterator's advancement
      */
@@ -103,25 +103,23 @@ class DFA {
     [[nodiscard]] static constexpr State advance_forward_once(Iterator& first, Sentinel last) noexcept {
         BEETLE_ASSERT(first != last);
 
-        auto ending_state = State::eAccept;
-
         if (is_ascii(*first)) {
             ++first;
-        } else {
-            ending_state = advance_mb_forward_once(first, last);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return advance_mb_forward_once(first, last);
     }
 
     /**
-     * Advances the given iterator over the reversed UTF-8 character between [first, last).
+     * Advance the given iterator over the reversed UTF-8 character between [first, last).
      *
      * @note This is designed to be used with an iterator or a free function to iterator over UTF-8 characters in
      * reverse. This will allow for reverse searching while also validating the UTF-8 characters.
      *
-     * @param first The iterator to be advanced
-     * @param last  The sentinel denoting the end of the range first points to
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
      *
      * @return The ending state of the iterator's advancement
      */
@@ -130,65 +128,78 @@ class DFA {
     [[nodiscard]] static constexpr State advance_backward_once(Iterator& first, Sentinel last) noexcept {
         BEETLE_ASSERT(first != last);
 
-        auto ending_state = State::eAccept;
-
         if (is_ascii(*first)) {
             --first;
-        } else {
-            ending_state = advance_mb_backward_once(first, last);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return advance_mb_backward_once(first, last);
     }
 
     /**
-     * Advances the given iterator forward over the UTF-8 character between [first, last).
+     * Decode and advance the given iterator forward over the UTF-8 character between [first, last).
      *
-     * @param first The iterator to be advanced
-     * @param last  The sentinel denoting the end of the range first points to
+     * @param[in, out]  first       The iterator to be advanced
+     * @param           last        The sentinel denoting the end of the range first points to
+     * @param[out]      code_point  The decoded Unicode code point
      *
      * @return The ending state of the iterator's advancement
      */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_forward_once(Iterator& first, Sentinel last,
-                                                                         char32_t& out_code_unit_32) noexcept {
+                                                                         char32_t& code_point) noexcept {
         BEETLE_ASSERT(first != last);
-
-        auto ending_state = State::eAccept;
 
         auto const leading_byte = *first;
 
         if (is_ascii(leading_byte)) {
-            out_code_unit_32 = leading_byte;
+            code_point = leading_byte;
             ++first;
-        } else {
-            ending_state = decode_and_advance_mb_forward_once(first, last, out_code_unit_32);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return decode_and_advance_mb_forward_once(first, last, code_point);
     }
 
+    /**
+     * Decode and advance the given iterator over the reversed UTF-8 character between [first, last).
+     *
+     * @param[in, out]  first       The iterator to be advanced
+     * @param           last        The sentinel denoting the end of the range first points to
+     * @param[out]      code_point  The decoded Unicode code point
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_backward_once(Iterator& first, Sentinel last,
-                                                                          char32_t& out_code_unit_32) noexcept {
+                                                                          char32_t& code_point) noexcept {
         BEETLE_ASSERT(first != last);
-
-        auto ending_state = State::eAccept;
 
         auto const leading_byte = *first;
 
         if (is_ascii(leading_byte)) {
-            out_code_unit_32 = leading_byte;
+            code_point = leading_byte;
             --first;
-        } else {
-            ending_state = decode_and_advance_mb_backward_once(first, last, out_code_unit_32);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return decode_and_advance_mb_backward_once(first, last, code_point);
     }
 
+    /**
+     * Copy the UTF-8 code units and advance the given iterator forward over the UTF-8 character between [first, last).
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     * @param[out]      result  The beginning of the destination range
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
               std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
@@ -197,8 +208,6 @@ class DFA {
                                                                        Output result) noexcept {
         BEETLE_ASSERT(first != last);
 
-        auto ending_state = State::eAccept;
-
         auto const leading_byte = *first;
 
         if (is_ascii(leading_byte)) {
@@ -206,13 +215,22 @@ class DFA {
 
             *result = leading_byte;
             ++result;
-        } else {
-            ending_state = copy_and_advance_mb_forward_once(first, last, result);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return copy_and_advance_mb_forward_once(first, last, result);
     }
 
+    /**
+     * Copy the UTF-8 code units and advance the given iterator over the reversed UTF-8 character between [first, last).
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     * @param[out]      result  The beginning of the destination range
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
               std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
@@ -221,8 +239,6 @@ class DFA {
                                                                         Output result) noexcept {
         BEETLE_ASSERT(first != last);
 
-        auto ending_state = State::eAccept;
-
         auto const leading_byte = *first;
 
         if (is_ascii(leading_byte)) {
@@ -230,13 +246,22 @@ class DFA {
 
             *result = leading_byte;
             ++result;
-        } else {
-            ending_state = copy_and_advance_mb_backward_once(first, last, result);
+
+            return State::eAccept;
         }
 
-        return ending_state;
+        return copy_and_advance_mb_backward_once(first, last, result);
     }
 
+    /**
+     * Create an UTF-8 error enum from the DFA error state.
+     *
+     * @note Undefined behavior if the given DFA error state is not an error state.
+     *
+     * @param ending_state The DFA error state
+     *
+     * @return The ending state of the iterator's advancement
+     */
     [[nodiscard]] static constexpr utf8::Error ending_state_to_error(State ending_state) noexcept {
         BEETLE_ASSERT(ending_state > State::eAccept && ending_state <= State::eErrMiss);
 
@@ -246,6 +271,15 @@ class DFA {
         return utf8::Error{static_cast<int>(ending_state) - enum_offset};
     }
 
+    /**
+     * Create an error condition based off of the DFA error state.
+     *
+     * @note Undefined behavior if the given DFA error state is not an error state.
+     *
+     * @param ending_state The DFA error state
+     *
+     * @return The associated error condition
+     */
     [[nodiscard]] static std::error_condition make_error_condition(State ending_state) noexcept {
         return beetle::make_error_condition(ending_state_to_error(ending_state));
     }
@@ -283,6 +317,16 @@ class DFA {
 
     // ================================================== ADVANCING ================================================= //
 
+    /**
+     * Advance the given iterator forward over the UTF-8 multi-byte character between [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_mb_forward_once(Iterator& first, Sentinel last) noexcept {
@@ -302,20 +346,23 @@ class DFA {
         return get_ending_state(state);
     }
 
+    /**
+     * Advance the given iterator over the reversed multi-byte UTF-8 character between [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State advance_mb_backward_once(Iterator& first, Sentinel last) noexcept {
         BEETLE_ASSERT(first != last);
         BEETLE_ASSERT(!utf8::internal::is_ascii(*first));
 
-        auto const is_continuation_byte = (*first & 0xC0) == 0x80;
-
-        // TODO: Figure out if unlikely should be added here
-        if (!is_continuation_byte) {
-            return State::eErrCont;
-        }
-
-        auto state = State::eS1;
+        auto state = get_start_backward_state(*first);
         --first;
 
         while (first != last && can_advance(state)) {
@@ -336,77 +383,35 @@ class DFA {
 
     // =========================================== DECODING AND ADVANCING =========================================== //
 
-    template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
-        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-    [[nodiscard]] static constexpr State decode_and_advance_mb_backward_once(Iterator& first, Sentinel last,
-                                                                             char32_t& out_code_unit_32) noexcept {
-        BEETLE_ASSERT(first != last);
-        BEETLE_ASSERT(!utf8::internal::is_ascii(*first));
-
-        // TODO: Clean-up code -- currently just trying to get it to work
-
-        auto const is_continuation_byte = (*first & 0xC0) == 0x80;
-
-        // TODO: Figure out if unlikely should be added here
-        if (!is_continuation_byte) {
-            return State::eErrCont;
-        }
-
-        out_code_unit_32 = *first & 0x3FU;
-
-        auto state = State::eS1;
-        --first;
-
-        auto shift_amount = 6;
-
-        while (first != last && !is_mb_leading_byte(*first) && can_advance(state)) {
-            auto const continuation_byte = *first;
-
-            auto const decoded_byte = continuation_byte & 0x3FU;  // 10xx xxxx
-
-            out_code_unit_32 = out_code_unit_32 | (static_cast<char32_t>(decoded_byte) << shift_amount);
-
-            state = advance_state_backward(state, continuation_byte);
-            --first;
-
-            shift_amount += 6;
-        }
-
-        // Bad state or valid leading byte
-        if (can_advance(state) && is_mb_leading_byte(*first)) {
-            auto const leading_byte = *first;
-            auto const leading_byte_data = get_leading_byte_info(leading_byte).data;
-
-            out_code_unit_32 = out_code_unit_32 | (static_cast<char32_t>(leading_byte_data) << shift_amount);
-
-            state = advance_state_backward(state, leading_byte);
-            --first;
-        }
-
-        return get_ending_state(state);
-    }
-
+    /**
+     * Decode and advance the given iterator forward over the UTF-8 character between [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first       The iterator to be advanced
+     * @param           last        The sentinel denoting the end of the range first points to
+     * @param[out]      code_point  The decoded Unicode code point
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
     [[nodiscard]] static constexpr State decode_and_advance_mb_forward_once(Iterator& first, Sentinel last,
-                                                                            char32_t& out_code_unit_32) noexcept {
+                                                                            char32_t& code_point) noexcept {
         BEETLE_ASSERT(first != last);
         BEETLE_ASSERT(!utf8::internal::is_ascii(*first));
 
         auto const leading_byte_info = get_leading_byte_info(*first);
-
-        out_code_unit_32 = leading_byte_info.data;
+        code_point = leading_byte_info.data;
 
         auto state = leading_byte_info.next_state;
         ++first;
 
         while (first != last && can_advance(state)) {
             auto const continuation_byte = *first;
+            auto const decoded_byte = decode_continuation_byte(continuation_byte);
 
-            auto const decoded_byte = continuation_byte & 0x3FU;  // 10xx xxxx
-            constexpr auto const decoded_bit_count = 6;
-
-            out_code_unit_32 = (out_code_unit_32 << decoded_bit_count) | decoded_byte;
+            code_point = (code_point << 6) | decoded_byte;
 
             state = advance_state_forward(state, continuation_byte);
             ++first;
@@ -415,8 +420,74 @@ class DFA {
         return get_ending_state(state);
     }
 
+    /**
+     * Decode and advance the given iterator over the reversed multi-byte UTF-8 character between [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first       The iterator to be advanced
+     * @param           last        The sentinel denoting the end of the range first points to
+     * @param[out]      code_point  The decoded Unicode code point
+     *
+     * @return The ending state of the iterator's advancement
+     */
+    template <std::bidirectional_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
+        requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
+    [[nodiscard]] static constexpr State decode_and_advance_mb_backward_once(Iterator& first, Sentinel last,
+                                                                             char32_t& code_point) noexcept {
+        BEETLE_ASSERT(first != last);
+        BEETLE_ASSERT(!utf8::internal::is_ascii(*first));
+
+        code_point = decode_continuation_byte(*first);
+
+        auto state = get_start_backward_state(*first);
+        --first;
+
+        auto shift_amount = 6;
+
+        while (first != last && is_continuation_byte(*first)) {
+            if (!can_advance(state)) {
+                return get_ending_state(state);
+            }
+
+            auto const continuation_byte = *first;
+            auto const decoded_byte = decode_continuation_byte(continuation_byte);
+
+            code_point = code_point | (static_cast<char32_t>(decoded_byte) << shift_amount);
+
+            state = advance_state_backward(state, continuation_byte);
+            --first;
+
+            shift_amount += 6;
+        }
+
+        if (is_mb_leading_byte(*first)) {
+            auto const leading_byte = *first;
+            auto const leading_byte_data = get_leading_byte_info(leading_byte).data;
+
+            code_point = code_point | (static_cast<char32_t>(leading_byte_data) << shift_amount);
+
+            state = advance_state_backward(state, leading_byte);
+            --first;
+        }
+
+        return get_ending_state(state);
+    }
+
     // =========================================== COPYING AND ADVANCING ============================================ //
 
+    /**
+     * Copy the UTF-8 code units and advance the given iterator forward over the multi-byte UTF-8 character between
+     * [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     * @param[out]      result  The beginning of the destination range
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
               std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
@@ -442,6 +513,18 @@ class DFA {
         return get_ending_state(state);
     }
 
+    /**
+     * Copy the UTF-8 code units and advance the given iterator over the reversed multi-byte UTF-8 character between
+     * [first, last).
+     *
+     * @note Undefined behavior if the UTF-8 character is an ASCII character.
+     *
+     * @param[in, out]  first   The iterator to be advanced
+     * @param           last    The sentinel denoting the end of the range first points to
+     * @param[out]      result  The beginning of the destination range
+     *
+     * @return The ending state of the iterator's advancement
+     */
     template <std::input_or_output_iterator Iterator, std::sentinel_for<Iterator> Sentinel,
               std::weakly_incrementable Output>
         requires std::indirectly_copyable<Iterator, Output> &&
@@ -451,14 +534,7 @@ class DFA {
         BEETLE_ASSERT(first != last);
         BEETLE_ASSERT(!utf8::internal::is_ascii(*first));
 
-        auto const is_continuation_byte = (*first & 0xC0) == 0x80;
-
-        // TODO: Figure out if unlikely should be added here
-        if (!is_continuation_byte) {
-            return State::eErrCont;
-        }
-
-        auto state = State::eS1;
+        auto state = get_start_backward_state(*first);
         --first;
 
         while (first != last && can_advance(state)) {
@@ -474,6 +550,15 @@ class DFA {
         return get_ending_state(state);
     }
 
+    /**
+     * Get the leading byte information associated with the given UTF-8 code unit.
+     *
+     * @note Undefined behavior if the given UTF-8 code unit is an ASCII character.
+     *
+     * @param leading_byte The leading UTF-8 byte
+     *
+     * @return The associated leading byte info
+     */
     [[nodiscard]] static constexpr LeadingByteInfo get_leading_byte_info(char8_t leading_byte) noexcept {
         BEETLE_ASSERT(!utf8::internal::is_ascii(leading_byte));
 
@@ -483,10 +568,43 @@ class DFA {
         return TableData::leading_byte_states[leading_byte_offset];
     }
 
+    /**
+     * Returns the starting state of the backwards DFA based on the given UTF-8 code unit.
+     *
+     * @param code_unit The input into the start of the backwards DFA
+     *
+     * @return The starting state
+     */
+    [[nodiscard]] static constexpr State get_start_backward_state(char8_t code_unit) noexcept {
+        if (utf8::internal::is_continuation_byte(code_unit)) {
+            return State::eS1;
+        }
+
+        return State::eErrCont;
+    }
+
+    /**
+     * Checks if the given state can be advanced from for the DFA.
+     *
+     * @note This currently works for both the forwards and backwards DFA
+     *
+     * @return If the state can be advanced
+     */
     [[nodiscard]] static constexpr bool can_advance(State current_state) noexcept {
         return current_state < State::eAccept;
     }
 
+    /**
+     * Advances the given state in the forward DFA using the UTF-8 code unit as input.
+     *
+     * @note Offset calculations are the same as advance_state_backward, and will remain separate since the tables are
+     * separate and subject to change.
+     *
+     * @param current_state The state to advance from in the DFA
+     * @param code_unit     The input for the DFA
+     *
+     * @return The next state
+     */
     [[nodiscard]] static constexpr State advance_state_forward(State current_state, char8_t code_unit) noexcept {
         auto const char_class = TableData::char_class[code_unit];
 
@@ -498,6 +616,17 @@ class DFA {
         return TableData::forward_transitions[row_offset + column_offset];
     }
 
+    /**
+     * Advances the given state in the backward DFA using the UTF-8 code unit as input.
+     *
+     * @note Offset calculations are the same as advance_state_forward, and will remain separate since the tables are
+     * separate and subject to change.
+     *
+     * @param current_state The state to advance from in the DFA
+     * @param code_unit     The input for the DFA
+     *
+     * @return The next state
+     */
     [[nodiscard]] static constexpr State advance_state_backward(State current_state, char8_t code_unit) noexcept {
         auto const char_class = TableData::char_class[code_unit];
 
@@ -509,13 +638,21 @@ class DFA {
         return TableData::backward_transitions[row_offset + column_offset];
     }
 
+    /**
+     * Translates the given DFA state to an ending state.
+     *
+     * @note This is supposed to help error out in progress states to generate better errors. This is the equivalent of
+     * sending an EOF or an end-of-input value.
+     *
+     * @return The ending DFA state
+     */
     [[nodiscard]] static constexpr State get_ending_state(State current_state) noexcept {
         return TableData::ending_states[static_cast<std::uint8_t>(current_state)];
     }
 
     struct alignas(4096) TableData {
         /**
-         * A table containing the character class of each UTF-8 code unit to reduce the sizes of the transition tables.
+         * A table containing the character class of each UTF-8 code unit to reduce the size of the transition tables.
          */
         static constexpr std::array<CharClass, 256> const char_class = {
             // ============================================= 0x00..0x0F ============================================= //
@@ -774,7 +911,7 @@ class DFA {
         /**
          * The transitions for the forward UTF-8 DFA.
          *
-         * @ Note Each section is a row and each character class in said row is a column.
+         * @Note Each section is a row and each character class in said row is a column.
          */
         static constexpr std::array<State, 84> const forward_transitions = {
 
@@ -837,7 +974,7 @@ class DFA {
         /**
          * The transitions for the backward UTF-8 DFA.
          *
-         * @ Note Each section is a row and each character class in said row is a column.
+         * @note Each section is a row and each character class in said row is a column.
          */
         static constexpr std::array<State, 72> const backward_transitions = {
             // ============================================= eS1 ============================================= //

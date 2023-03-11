@@ -68,6 +68,11 @@ inline namespace cpp20_v1 {
     return (code_unit & 0xC0U) == 0x80U;
 }
 
+[[nodiscard]] constexpr char8_t decode_continuation_byte(char8_t continuation_byte) noexcept {
+    // 10xx xxxx
+    return continuation_byte & 0x3FU;
+}
+
 namespace unsafe {
 
 /**
