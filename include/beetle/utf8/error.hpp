@@ -66,6 +66,13 @@ enum class Error {
 // NOLINTNEXTLINE(readability-identifier-naming)
 inline namespace cpp20_v1 {
 
+/**
+ * Convert the given error into a string.
+ *
+ * @param error The error enumeration to stringify
+ *
+ * @return The string representation of the given error
+ */
 [[nodiscard]] constexpr std::string to_string(utf8::Error error) {
     switch (error) {
         case utf8::Error::eLeadingByte:
@@ -90,7 +97,7 @@ inline namespace cpp20_v1 {
 }
 
 /**
- * Creates an error condition from the given UTF-8 error value.
+ * Create an error condition from the given UTF-8 error value.
  *
  * @param error The UTF-8 error code
  *

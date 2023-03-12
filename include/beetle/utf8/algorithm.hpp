@@ -42,7 +42,7 @@
 #include "utf8/internal/dfa.hpp"
 
 /**
- * Contains algorithms to inspect a sequence of code units.
+ * Algorithms to inspect, validate, decode, and encode UTF-8 character(s).
  *
  * @file validate.hpp
  */
