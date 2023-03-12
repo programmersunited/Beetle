@@ -52,10 +52,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
     // ================================================= ITERATING ================================================== //
 
-    static constexpr auto const next_it = utf8::next(u8_str_begin, u8_str_end);
+    static constexpr auto const next_it = utf8::next_once(u8_str_begin, u8_str_end);
     static_assert(*next_it == 0xF0U);
 
-    static constexpr auto const prev_it = utf8::prev(next_it, u8_str_end);
+    static constexpr auto const prev_it = utf8::prev_once(next_it, u8_str_end);
     static_assert(*prev_it == *u8_str_begin);
 
     // ================================================== ENCODING ================================================== //
