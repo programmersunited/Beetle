@@ -31,6 +31,8 @@
 #include <optional>
 #include <stdexcept>
 
+#include "beetle/core/types.hpp"
+
 namespace beetle {
 
 // NOLINTNEXTLINE(readability-identifier-naming)
@@ -47,7 +49,7 @@ struct NoUnicodeValidation {};
 
 class Unicode {
    public:
-    using value_type = std::uint32_t;
+    using value_type = beetle::code_point;
 
     constexpr Unicode() noexcept = default;
 
@@ -55,9 +57,7 @@ class Unicode {
 
     [[nodiscard]] constexpr auto operator<=>(Unicode const&) const noexcept = default;
 
-    [[nodiscard]] constexpr std::strong_ordering operator<=>(value_type value) const noexcept {
-        return this->m_data <=> value;
-    }
+    [[nodiscard]] constexpr auto operator<=>(value_type value) const noexcept { return this->m_data <=> value; }
 
     constexpr Unicode& operator=(value_type other) {
         this->m_data = Unicode::validate(other);

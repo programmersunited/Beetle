@@ -27,13 +27,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     // TODO: Implement after library is done.
     // parse_command_line(argc, argv);
 
-    static constexpr auto const u8_str = std::array<char8_t, 7>{0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
+    // TODO:
+    // Document
+    //  - unicode.hpp
+    //  - algorithm.hpp
+    //
+    // Test
+    //  - Everything
+    //
+    // Setup
+    //  - Doxygen
+    //  - Clang checks
+    //  - Examples
 
-    static constexpr auto const u8_str_begin = std::ranges::begin(u8_str);
-    static constexpr auto const u8_str_end = std::ranges::end(u8_str);
+    static constexpr auto u8_str = std::array<char8_t, 7>{0xEDU, 0x95U, 0x9CU, 0xF0U, 0x90U, 0x8DU, 0x88U};
 
-    static constexpr auto const u8_hangul_syllables = std::u8string_view{u8_str.data(), 3};
-    static constexpr auto const u8_hwair = std::u8string_view{std::ranges::next(u8_str_begin, 3), u8_str_end};
+    static constexpr auto u8_str_begin = std::ranges::begin(u8_str);
+    static constexpr auto u8_str_end = std::ranges::end(u8_str);
+
+    static constexpr auto u8_hangul_syllables = std::u8string_view{u8_str.data(), 3};
+    static constexpr auto u8_hwair = std::u8string_view{std::ranges::next(u8_str_begin, 3), u8_str_end};
 
     namespace utf8 = beetle::utf8;
 
@@ -52,22 +65,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
     // ================================================= ITERATING ================================================== //
 
-    static constexpr auto const next_it = utf8::next_once(u8_str_begin, u8_str_end);
+    static constexpr auto next_it = utf8::next_once(u8_str_begin, u8_str_end);
     static_assert(*next_it == 0xF0U);
 
-    static constexpr auto const prev_it = utf8::prev_once(next_it, u8_str_end);
+    static constexpr auto prev_it = utf8::prev_once(next_it, u8_str_end);
     static_assert(*prev_it == *u8_str_begin);
 
     // ================================================== ENCODING ================================================== //
 
-    static constexpr auto const hangul_syllables = beetle::Unicode{0xD55CU};
+    static constexpr auto hangul_syllables = beetle::Unicode{0xD55CU};
 
     auto encoded_hangul_syllables = std::array<char8_t, 3>{0};
     utf8::encode(hangul_syllables, std::ranges::begin(encoded_hangul_syllables));
 
     // ================================================== DECODING ================================================== //
 
-    static constexpr auto const decoded_hangul_syllables = utf8::decode(u8_hangul_syllables);
+    static constexpr auto decoded_hangul_syllables = utf8::decode(u8_hangul_syllables);
 
     static_assert(hangul_syllables == decoded_hangul_syllables);
 
