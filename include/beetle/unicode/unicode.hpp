@@ -31,8 +31,6 @@
 #include <optional>
 #include <stdexcept>
 
-#include "beetle/core/types.hpp"
-
 namespace beetle {
 
 // NOLINTNEXTLINE(readability-identifier-naming)
@@ -47,24 +45,56 @@ struct NoUnicodeValidation {};
 
 }  // namespace
 
+/**
+ * A representation of a Unicode value.
+ *
+ * @note This will throw on construction if the given value is over the valid Unicode max value.
+ */
 class Unicode {
    public:
-    using value_type = beetle::code_point;
+    /**
+     * The underlying integer type for the Unicode value.
+     */
+    using value_type = std::uint32_t;
 
+    /**
+     * Default constructor.
+     */
     constexpr Unicode() noexcept = default;
 
-    constexpr Unicode(value_type value) : m_data{validate_construct(value)} {}
+    /**
+     * Construct Unicode using the given value.
+     *
+     * @param value The unicode value
+     *
+     * @throws std::invalid_argument if the given value is too large to be a Unicode value
+     */
+    constexpr Unicode(value_type value) : m_data{validate(value)} {}
 
     [[nodiscard]] constexpr auto operator<=>(Unicode const&) const noexcept = default;
 
-    [[nodiscard]] constexpr auto operator<=>(value_type value) const noexcept { return this->m_data <=> value; }
-
+    /**
+     * Assign the given value to this Unicode.
+     *
+     * @param other The new value for this Unicode
+     *
+     * @return A reference to this Unicode
+     *
+     * @throws std::invalid_argument if the given value is too large to be a Unicode value
+     */
     constexpr Unicode& operator=(value_type other) {
         this->m_data = Unicode::validate(other);
 
         return *this;
     }
 
+    /**
+     * Construct an Unicode value using the given value.
+     *
+     * @param value The value for the Unicode value
+     *
+     * @return The Unicode value if the given value is valid, otherwise std::nullopt.
+     */
     [[nodiscard]] static constexpr std::optional<Unicode> create(value_type value) noexcept {
         if (Unicode::is_valid(value)) {
             return Unicode{NoUnicodeValidation{}, value};
@@ -73,7 +103,16 @@ class Unicode {
         return std::nullopt;
     }
 
-    [[nodiscard]] static constexpr bool is_valid(std::integral auto value) noexcept { return value <= 0x10FFFFU; }
+    /**
+     * Check if the given value is a valid Unicode value.
+     *
+     * @param value The value to check
+     *
+     * @return true if valid, otherwise false.
+     */
+    [[nodiscard]] static constexpr bool is_valid(std::unsigned_integral auto value) noexcept {
+        return value <= 0x10FFFFU;
+    }
 
     template <typename IntegerType>
         requires std::integral<IntegerType>
@@ -82,36 +121,75 @@ class Unicode {
     friend constexpr Unicode operator""_U(unsigned long long int unicode_value);
 
    private:
+    /**
+     * The underlying integer representation of the Unicode value.
+     *
+     * @note The default constructed value is 0.
+     */
     value_type m_data{0};
 
+    /**
+     * Constructs an Unicode value using the given value.
+     *
+     * @param value The value for Unicode
+     *
+     * @note This is used to bypass the validation check.
+     */
     constexpr Unicode(NoUnicodeValidation, value_type value) : m_data{value} {}
 
-    [[noreturn]] static value_type throw_unicode_error() { throw std::invalid_argument{"Invalid Unicode value."}; }
-
-    [[nodiscard]] static constexpr value_type validate_construct(value_type value) {
-        return value <= 0x10FFFFU ? value : throw std::invalid_argument{"Invalid Unicode value."};
-    }
-
-    [[nodiscard]] static constexpr value_type validate(std::integral auto value) {
-        return value <= 0x10FFFFU ? value : throw std::invalid_argument{"Invalid Unicode value."};
+    /**
+     * Validate if the given value is a valid Unicode value.
+     *
+     * @param value The value to validate
+     *
+     * @return The given value
+     *
+     * @throws std::invalid_argument if the given value is not a valid Unicode value, otherwise true.
+     */
+    [[nodiscard]] static constexpr value_type validate(value_type value) {
+        return Unicode::is_valid(value) ? value : throw std::invalid_argument{"Invalid Unicode value."};
     }
 };
 
+/**
+ * User-defined literal for constructing a Unicde value using the given value.
+ *
+ * @param unicode_value The Unicode value
+ *
+ * @throws std::invalid_argument if the given value is too large to be a Unicode value
+ *
+ * @return The constructed Unicode value
+ */
 [[nodiscard]] constexpr Unicode operator""_U(unsigned long long int unicode_value) {
     if (Unicode::is_valid(unicode_value)) {
         return Unicode{NoUnicodeValidation{}, static_cast<Unicode::value_type>(unicode_value)};
     }
 
     throw std::invalid_argument{"Invalid Unicode value."};
-    // Unicode::throw_unicode_error();
 }
 
+/**
+ * Convert the given Unicode value to the given integer type.
+ *
+ * @tparam IntegerType The integer type to convert to
+ *
+ * @param value The Unicode value to convert
+ *
+ * @return The Unicode value as the given integer type
+ */
 template <typename IntegerType>
     requires std::integral<IntegerType>
 [[nodiscard]] constexpr IntegerType to_integer(Unicode value) noexcept {
     return IntegerType(value.m_data);
 }
 
+/**
+ * Convert the given Unicode value to its underlying integer type.
+ *
+ * @param value The Unicode value to convert
+ *
+ * @return The Unicode value as its underlying integer type
+ */
 [[nodiscard]] constexpr auto to_integer(Unicode value) noexcept {
     return beetle::to_integer<Unicode::value_type>(value);
 }
