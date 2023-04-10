@@ -9,3 +9,4 @@ get_target_property(BEETLE_SOURCES Beetle SOURCES)
 list(REMOVE_ITEM BEETLE_SOURCES ${BEETLE_UTILITY_ENTRYPOINT})
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/unicode")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/utf8")
