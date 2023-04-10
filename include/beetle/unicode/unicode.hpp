@@ -56,11 +56,6 @@ struct NoUnicodeValidation {};
 class Unicode {
    public:
     /**
-     * The underlying integer type for the Unicode value.
-     */
-    using value_type = std::uint32_t;
-
-    /**
      * An Unicode Exception.
      */
     class Exception : public std::exception {
@@ -87,7 +82,7 @@ class Unicode {
          *
          * @return The error message
          */
-        char const* what() const noexcept override { return this->m_msg.c_str(); }
+        [[nodiscard]] char const* what() const noexcept override { return this->m_msg.c_str(); }
 
        private:
         /**
@@ -95,6 +90,11 @@ class Unicode {
          */
         std::string m_msg;
     };
+
+    /**
+     * The underlying integer type for the Unicode value.
+     */
+    using value_type = std::uint32_t;
 
     /**
      * Default constructor.
