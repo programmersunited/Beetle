@@ -28,8 +28,11 @@
 #include <compare>
 #include <concepts>
 #include <cstdint>
+#include <iomanip>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 
 namespace beetle {
 
@@ -56,6 +59,42 @@ class Unicode {
      * The underlying integer type for the Unicode value.
      */
     using value_type = std::uint32_t;
+
+    /**
+     * An Unicode Exception.
+     */
+    class Exception : public std::exception {
+       public:
+        /**
+         * Construct an Unicode exception using the given unsigned value.
+         *
+         * @param value The unsigned value for the exception message
+         */
+        Exception(std::unsigned_integral auto value) {
+            // TODO: Change to std::format when supported by more compilers
+            std::stringstream stream;
+
+            stream << "Unicode value is too large: U+";
+            stream << std::hex << value;
+
+            this->m_msg = stream.str();
+        }
+
+        ~Exception() override = default;
+
+        /**
+         * Return the error message for this exception.
+         *
+         * @return The error message
+         */
+        char const* what() const noexcept override { return this->m_msg.c_str(); }
+
+       private:
+        /**
+         * The error message for this Unicode exception.
+         */
+        std::string m_msg;
+    };
 
     /**
      * Default constructor.
@@ -147,7 +186,7 @@ class Unicode {
      * @throws std::invalid_argument if the given value is not a valid Unicode value, otherwise true.
      */
     [[nodiscard]] static constexpr value_type validate(value_type value) {
-        return Unicode::is_valid(value) ? value : throw std::invalid_argument{"Invalid Unicode value."};
+        return Unicode::is_valid(value) ? value : throw Unicode::Exception{value};
     }
 };
 
@@ -165,7 +204,7 @@ class Unicode {
         return Unicode{NoUnicodeValidation{}, static_cast<Unicode::value_type>(unicode_value)};
     }
 
-    throw std::invalid_argument{"Invalid Unicode value."};
+    throw Unicode::Exception{unicode_value};
 }
 
 /**

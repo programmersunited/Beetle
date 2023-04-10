@@ -17,7 +17,7 @@ TEST(UnicodeTest, construction) {
     EXPECT_NO_THROW({ Unicode{max_unicode_value}; });
     EXPECT_NO_THROW({ Unicode{max_unicode_value - 1}; });
 
-    EXPECT_THROW({ Unicode{max_unicode_value + 1}; }, std::invalid_argument);
+    EXPECT_THROW({ Unicode{max_unicode_value + 1}; }, Unicode::Exception);
 
     EXPECT_EQ(Unicode{}, Unicode{0});
     EXPECT_EQ(to_integer(Unicode{0x123U}), 0x123U);
@@ -40,7 +40,7 @@ TEST(UnicodeTest, literal) {
     EXPECT_NO_THROW({ auto const value = 0x10FFFE_U; });
     EXPECT_NO_THROW({ auto const value = 0x10FFFF_U; });
 
-    EXPECT_THROW({ auto const value = 0x110000_U; }, std::invalid_argument);
+    EXPECT_THROW({ auto const value = 0x110000_U; }, Unicode::Exception);
 }
 
 TEST(UnicodeTest, create) {
