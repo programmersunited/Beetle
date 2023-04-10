@@ -68,9 +68,7 @@ class Unicode {
         Exception(std::unsigned_integral auto value) {
             // TODO: Change to std::format when supported by more compilers
             std::stringstream stream;
-
-            stream << "Unicode value is too large: U+";
-            stream << std::hex << value;
+            stream << "Unicode value is too large: U+" << std::hex << value;
 
             this->m_msg = stream.str();
         }
