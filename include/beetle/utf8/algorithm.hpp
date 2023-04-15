@@ -352,7 +352,7 @@ template <std::ranges::input_range Range>
  * @return The iterator after the UTF-8 character
  */
 template <std::weakly_incrementable Output>
-constexpr Output encode(beetle::Unicode code_point, Output result) {
+constexpr Output encode(unicode::CodePoint code_point, Output result) {
     auto const raw_value = beetle::to_integer(code_point);
 
     if (code_point <= 0x7FU) {
@@ -438,7 +438,7 @@ constexpr encode_result<std::ranges::borrowed_iterator_t<Range>, Output> encode(
  */
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-[[nodiscard]] constexpr beetle::Unicode decode_and_advance(Iterator& first, Sentinel last) {
+[[nodiscard]] constexpr unicode::CodePoint decode_and_advance(Iterator& first, Sentinel last) {
     auto code_point = char32_t{0};
     auto const ending_state = utf8::internal::DFA::decode_and_advance_forward_once(first, last, code_point);
 
@@ -446,7 +446,7 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
         throw utf8::internal::DFA::make_error_condition(ending_state);
     }
 
-    return beetle::Unicode{static_cast<Unicode::value_type>(code_point)};
+    return unicode::CodePoint{static_cast<unicode::CodePoint::value_type>(code_point)};
 }
 
 /**
@@ -461,7 +461,7 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
  */
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t>
-[[nodiscard]] constexpr beetle::Unicode decode(Iterator first, Sentinel last) {
+[[nodiscard]] constexpr unicode::CodePoint decode(Iterator first, Sentinel last) {
     auto code_point = utf8::decode_and_advance(first, last);
 
     if (first != last) {
@@ -481,7 +481,7 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel>
  * @return The Unicode code point
  */
 template <std::ranges::input_range Range>
-[[nodiscard]] constexpr beetle::Unicode decode(Range&& range) {
+[[nodiscard]] constexpr unicode::CodePoint decode(Range&& range) {
     return utf8::decode(std::ranges::begin(range), std::ranges::end(range));
 }
 
@@ -496,7 +496,7 @@ template <std::ranges::input_range Range>
  */
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t> &&
-             std::convertible_to<typename std::iter_value_t<Output>, beetle::Unicode>
+             std::convertible_to<typename std::iter_value_t<Output>, unicode::CodePoint>
 [[nodiscard]] constexpr utf8::decode_result<Iterator, Output> decode(Iterator first, Sentinel last, Output result) {
     while (first != last) {
         auto code_point = char32_t{0};
@@ -506,7 +506,7 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, st
             break;
         }
 
-        *result = static_cast<Unicode::value_type>(code_point);
+        *result = static_cast<unicode::CodePoint::value_type>(code_point);
         ++result;
     }
 
@@ -523,7 +523,7 @@ template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, st
  */
 template <std::ranges::input_range Range, std::weakly_incrementable Output>
     requires std::convertible_to<typename std::ranges::iterator_t<Range>, char8_t> &&
-             std::convertible_to<typename std::iter_value_t<Output>, beetle::Unicode>
+             std::convertible_to<typename std::iter_value_t<Output>, unicode::CodePoint>
 [[nodiscard]] constexpr utf8::decode_result<std::ranges::borrowed_iterator_t<Range>, Output> decode(Range&& range,
                                                                                                     Output result) {
     return utf8::decode(std::ranges::begin(range), std::ranges::end(range), result);
@@ -546,8 +546,9 @@ template <std::ranges::input_range Range, std::weakly_incrementable Output>
 template <std::input_iterator Iterator, std::sentinel_for<Iterator> Sentinel, std::weakly_incrementable Output>
     requires std::convertible_to<typename std::iter_value_t<Iterator>, char8_t> &&
              std::indirectly_copyable<Iterator, Output>
-constexpr utf8::sanitize_result<Iterator, Output> sanitize(Iterator first, Sentinel last, Output result,
-                                                           beetle::Unicode replacement_code_point = 0xFFFDU) {
+constexpr utf8::sanitize_result<Iterator, Output> sanitize(
+    Iterator first, Sentinel last, Output result,
+    unicode::CodePoint replacement_code_point = unicode::code_points::replacement_character) {
     // Convert code unit to UTF-8
     std::u8string replacement_char;
     replacement_char.reserve(4);
@@ -592,7 +593,8 @@ constexpr utf8::sanitize_result<Iterator, Output> sanitize(Iterator first, Senti
 template <std::ranges::input_range Range, std::weakly_incrementable Output>
     requires std::indirectly_copyable<std::ranges::iterator_t<Range>, Output>
 constexpr utf8::sanitize_result<std::ranges::borrowed_iterator_t<Range>, Output> sanitize(
-    Range&& range, Output result, beetle::Unicode replacement_code_point = 0xFFFDU) {
+    Range&& range, Output result,
+    unicode::CodePoint replacement_code_point = unicode::code_points::replacement_character) {
     return sanitize(std::ranges::begin(range), std::ranges::end(range), result, replacement_code_point);
 }
 

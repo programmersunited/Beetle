@@ -36,177 +36,33 @@
 
 namespace beetle {
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-inline namespace cpp20_v1 {
+namespace unicode {
 
-namespace {
+class CodePoint;
 
-/**
- * Tag type to not validate unicode input.
- */
-struct NoUnicodeValidation {};
+}  // namespace unicode
 
-}  // namespace
+inline namespace literals {
+
+inline namespace unicode_literals {
 
 /**
- * A representation of a Unicode value.
+ * User-defined literal for constructing an Unicode code point using the given value.
  *
- * @note This will throw on construction if the given value is over the valid Unicode max value.
- */
-class Unicode {
-   public:
-    /**
-     * An Unicode Exception.
-     */
-    class Exception : public std::exception {
-       public:
-        /**
-         * Construct an Unicode exception using the given unsigned value.
-         *
-         * @param value The unsigned value for the exception message
-         */
-        Exception(std::unsigned_integral auto value) {
-            // TODO: Change to std::format when supported by more compilers
-            std::stringstream stream;
-            stream << "Unicode value is too large: U+" << std::hex << value;
-
-            this->m_msg = stream.str();
-        }
-
-        ~Exception() override = default;
-
-        /**
-         * Return the error message for this exception.
-         *
-         * @return The error message
-         */
-        [[nodiscard]] char const* what() const noexcept override { return this->m_msg.c_str(); }
-
-       private:
-        /**
-         * The error message for this Unicode exception.
-         */
-        std::string m_msg;
-    };
-
-    /**
-     * The underlying integer type for the Unicode value.
-     */
-    using value_type = std::uint32_t;
-
-    /**
-     * Default constructor.
-     */
-    constexpr Unicode() noexcept = default;
-
-    /**
-     * Construct Unicode using the given value.
-     *
-     * @param value The unicode value
-     *
-     * @throws std::invalid_argument if the given value is too large to be a Unicode value
-     */
-    constexpr Unicode(value_type value) : m_data{validate(value)} {}
-
-    [[nodiscard]] constexpr auto operator<=>(Unicode const&) const noexcept = default;
-
-    /**
-     * Assign the given value to this Unicode.
-     *
-     * @param other The new value for this Unicode
-     *
-     * @return A reference to this Unicode
-     *
-     * @throws std::invalid_argument if the given value is too large to be a Unicode value
-     */
-    constexpr Unicode& operator=(value_type other) {
-        this->m_data = Unicode::validate(other);
-
-        return *this;
-    }
-
-    /**
-     * Construct an Unicode value using the given value.
-     *
-     * @param value The value for the Unicode value
-     *
-     * @return The Unicode value if the given value is valid, otherwise std::nullopt.
-     */
-    [[nodiscard]] static constexpr std::optional<Unicode> create(value_type value) noexcept {
-        if (Unicode::is_valid(value)) {
-            return Unicode{NoUnicodeValidation{}, value};
-        }
-
-        return std::nullopt;
-    }
-
-    /**
-     * Check if the given value is a valid Unicode value.
-     *
-     * @param value The value to check
-     *
-     * @return true if valid, otherwise false.
-     */
-    [[nodiscard]] static constexpr bool is_valid(std::unsigned_integral auto value) noexcept {
-        return value <= 0x10FFFFU;
-    }
-
-    template <typename IntegerType>
-        requires std::integral<IntegerType>
-    friend constexpr IntegerType to_integer(Unicode value) noexcept;
-
-    friend constexpr Unicode operator""_U(unsigned long long int unicode_value);
-
-   private:
-    /**
-     * The underlying integer representation of the Unicode value.
-     *
-     * @note The default constructed value is 0.
-     */
-    value_type m_data{0};
-
-    /**
-     * Constructs an Unicode value using the given value.
-     *
-     * @param value The value for Unicode
-     *
-     * @note This is used to bypass the validation check.
-     */
-    constexpr Unicode(NoUnicodeValidation, value_type value) : m_data{value} {}
-
-    /**
-     * Validate if the given value is a valid Unicode value.
-     *
-     * @param value The value to validate
-     *
-     * @return The given value
-     *
-     * @throws std::invalid_argument if the given value is not a valid Unicode value, otherwise true.
-     */
-    [[nodiscard]] static constexpr value_type validate(value_type value) {
-        return Unicode::is_valid(value) ? value : throw Unicode::Exception{value};
-    }
-};
-
-/**
- * User-defined literal for constructing a Unicde value using the given value.
+ * @param code_point The Unicode code point
  *
- * @param unicode_value The Unicode value
- *
- * @throws std::invalid_argument if the given value is too large to be a Unicode value
+ * @throws std::invalid_argument if the given value is too large to be a Unicode code point
  *
  * @return The constructed Unicode value
  */
-[[nodiscard]] constexpr Unicode operator""_U(unsigned long long int unicode_value) {
-    if (Unicode::is_valid(unicode_value)) {
-        return Unicode{NoUnicodeValidation{}, static_cast<Unicode::value_type>(unicode_value)};
-    }
+[[nodiscard]] constexpr unicode::CodePoint operator""_U(unsigned long long int code_point);
 
-    throw Unicode::Exception{unicode_value};
-}
+}  // namespace unicode_literals
+
+}  // namespace literals
 
 /**
- * Convert the given Unicode value to the given integer type.
+ * Convert the given Unicode code point to the given integer type.
  *
  * @tparam IntegerType The integer type to convert to
  *
@@ -216,23 +72,241 @@ class Unicode {
  */
 template <typename IntegerType>
     requires std::integral<IntegerType>
-[[nodiscard]] constexpr IntegerType to_integer(Unicode value) noexcept {
-    return IntegerType(value.m_data);
+[[nodiscard]] constexpr IntegerType to_integer(unicode::CodePoint code_point) noexcept;
+
+namespace unicode {
+
+/**
+ * An Unicode Exception.
+ */
+class Exception : public std::exception {
+   public:
+    /**
+     * Construct an Unicode exception using the given unsigned value.
+     *
+     * @param value The unsigned value for the exception message
+     */
+    Exception(std::unsigned_integral auto code_point) {
+        // TODO: Change to std::format when supported by more compilers
+        std::stringstream stream;
+        stream << "Unicode value is too large: U+" << std::hex << code_point;
+
+        this->m_msg = stream.str();
+    }
+
+    ~Exception() override = default;
+
+    /**
+     * Return the error message for this exception.
+     *
+     * @return The error message
+     */
+    [[nodiscard]] char const* what() const noexcept override { return this->m_msg.c_str(); }
+
+   private:
+    /**
+     * The error message for this Unicode exception.
+     */
+    std::string m_msg;
+};
+
+namespace {
+
+/**
+ * Tag type to not validate Unicode code point.
+ */
+struct NoUnicodeValidation {};
+
+}  // namespace
+
+/**
+ * A representation of an Unicode code point.
+ *
+ * @note This will throw on construction if the given value is over the valid Unicode code point max value.
+ */
+class CodePoint {
+   public:
+    /**
+     * The underlying integer type for the Unicode code point.
+     */
+    using value_type = std::uint32_t;
+
+    /**
+     * The minimum Unicode code point value.
+     */
+    static inline constexpr value_type min_value{0x0U};
+
+    /**
+     * The maximum Unicode code point value.
+     */
+    static inline constexpr value_type max_value{0x10FFFFU};
+
+    /**
+     * Default constructor.
+     */
+    constexpr CodePoint() noexcept = default;
+
+    /**
+     * Construct Unicode code point using the given value.
+     *
+     * @param value The Unicode code point's value
+     *
+     * @throws unicode::Exception if the given value is too large to be a Unicode code point
+     */
+    constexpr CodePoint(value_type value) : m_data{validate(value)} {}
+
+    [[nodiscard]] constexpr auto operator<=>(CodePoint const&) const noexcept = default;
+
+    /**
+     * Assign the given value to this Unicode code point.
+     *
+     * @param other The new value for this Unicode code point
+     *
+     * @return A reference to this Unicode code point
+     *
+     * @throws unicode::Exception if the given value is too large to be an Unicode code point
+     */
+    constexpr CodePoint& operator=(value_type other) {
+        this->m_data = CodePoint::validate(other);
+
+        return *this;
+    }
+
+    /**
+     * Construct an Unicode code point using the given value.
+     *
+     * @param code_point The value for the Unicode code point
+     *
+     * @return The Unicode code point if the given value is valid, otherwise std::nullopt.
+     */
+    [[nodiscard]] static constexpr std::optional<CodePoint> create(value_type code_point) noexcept {
+        if (CodePoint::is_valid(code_point)) {
+            return CodePoint{NoUnicodeValidation{}, code_point};
+        }
+
+        return std::nullopt;
+    }
+
+    /**
+     * Check if the given value is a valid Unicode code point.
+     *
+     * @param code_point The Unicode code point to check
+     *
+     * @return true if valid, otherwise false.
+     */
+    [[nodiscard]] static constexpr bool is_valid(std::unsigned_integral auto code_point) noexcept {
+        return code_point <= CodePoint::max_value;
+    }
+
+    template <typename IntegerType>
+        requires std::integral<IntegerType>
+    friend constexpr IntegerType beetle::to_integer(unicode::CodePoint code_point) noexcept;
+
+    friend constexpr CodePoint literals::unicode_literals::operator""_U(unsigned long long int code_point);
+
+   private:
+    /**
+     * The underlying integer representation of the Unicode code point.
+     *
+     * @note The default constructed value is 0.
+     */
+    value_type m_data{0};
+
+    /**
+     * Constructs an Unicode code point using the given value.
+     *
+     * @param value The value for Unicode code point
+     *
+     * @note This is used to bypass the validation check.
+     */
+    constexpr CodePoint(NoUnicodeValidation, value_type value) : m_data{value} {}
+
+    /**
+     * Validate if the given value is a valid Unicode code point.
+     *
+     * @param value The value to validate
+     *
+     * @return The given value
+     *
+     * @throws std::invalid_argument if the given value is not a valid Unicode code point, otherwise true.
+     */
+    [[nodiscard]] static constexpr value_type validate(value_type value) {
+        return CodePoint::is_valid(value) ? value : throw unicode::Exception{value};
+    }
+};
+
+namespace code_points {
+
+/**
+ * Unicode replacement character.
+ *
+ * @note It is common practice to replace an invalid Unicode code point with the replacement character.
+ */
+constexpr CodePoint replacement_character{0xFFFDU};
+
+/**
+ * The minimum Unicode code point.
+ */
+constexpr CodePoint min{CodePoint::min_value};
+
+/**
+ * The maximum Unicode code point.
+ */
+constexpr CodePoint max{CodePoint::max_value};
+
+}  // namespace code_points
+
+/**
+ * Give access to Unicode literals when doing `using namespace beetle::unicode`
+ */
+using namespace literals::unicode_literals;
+
+}  // namespace unicode
+
+inline namespace literals {
+
+inline namespace unicode_literals {
+
+[[nodiscard]] constexpr unicode::CodePoint operator""_U(unsigned long long int code_point) {
+    if (unicode::CodePoint::is_valid(code_point)) {
+        return unicode::CodePoint{unicode::NoUnicodeValidation{},
+                                  static_cast<unicode::CodePoint::value_type>(code_point)};
+    }
+
+    throw unicode::Exception{code_point};
+}
+
+}  // namespace unicode_literals
+
+}  // namespace literals
+
+template <typename IntegerType>
+    requires std::integral<IntegerType>
+[[nodiscard]] constexpr IntegerType to_integer(unicode::CodePoint code_point) noexcept {
+    return IntegerType(code_point.m_data);
 }
 
 /**
- * Convert the given Unicode value to its underlying integer type.
+ * Convert the given Unicode code point to its underlying integer type.
  *
- * @param value The Unicode value to convert
+ * @param value The Unicode code point to convert
  *
- * @return The Unicode value as its underlying integer type
+ * @return The Unicode code point as its underlying integer type
  */
-[[nodiscard]] constexpr auto to_integer(Unicode value) noexcept {
-    return beetle::to_integer<Unicode::value_type>(value);
+[[nodiscard]] constexpr auto to_integer(unicode::CodePoint code_point) noexcept {
+    return beetle::to_integer<unicode::CodePoint::value_type>(code_point);
 }
 
-}  // namespace cpp20_v1
-
 }  // namespace beetle
+
+constexpr void test() {
+    // using namespace beetle::literals;
+    // using namespace beetle::unicode_literals;
+    // using namespace beetle::literals::unicode_literals;
+    using namespace beetle::unicode;
+
+    if (0x11_U < 0x1234_U) {
+    }
+}
 
 #endif
