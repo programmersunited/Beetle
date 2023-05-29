@@ -26,21 +26,34 @@
 #define BEETLE_UTF8_ERROR_HPP
 
 #include <string>
-#include <system_error>
-#include <type_traits>
+
+#include "beetle/core/error_code.hpp"
+
+/**
+ * Non-throwing error reporting for UTF-8.
+ *
+ * @file error.hpp
+ */
 
 namespace beetle {
 
 namespace utf8 {
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-inline namespace cpp20_v1 {
+inline namespace v1 {
 
+/**
+ * UTF-8 character errors.
+ */
 enum class Error {
+    /**
+     * No error.
+     */
+    eNone = 0,
+
     /**
      * Expecting a leading byte in the UTF-8 character.
      */
-    eLeadingByte = 1,
+    eLeadingByte,
 
     /**
      * UTF-8 character is overlong encoded.
@@ -55,16 +68,65 @@ enum class Error {
     /**
      * More byte(s) are expected in the UTF-8 character.
      */
-    eMissingByte
+    eMissingByte,
 
+    /**
+     * Unknown error.
+     */
+    eUnknown
 };
 
-}  // namespace cpp20_v1
+/**
+ * Return the associated error description for the given enumeration error code.
+ *
+ * @see beetle::ErrorCode
+ * @see beetle::message
+ *
+ * @param error The enumeration error code
+ *
+ * @return The error description
+ */
+[[nodiscard]] constexpr std::string message(utf8::Error error) noexcept {
+    switch (error) {
+        case utf8::Error::eNone:
+            return "none";
+            break;
+
+        case utf8::Error::eLeadingByte:
+            return "expected a leading byte";
+            break;
+
+        case utf8::Error::eOverlongEncoded:
+            return "detected overlong encoding";
+            break;
+
+        case utf8::Error::eContinuationByte:
+            return "expected a continuation byte";
+            break;
+
+        case utf8::Error::eMissingByte:
+            return "expected more bytes";
+            break;
+
+        default:
+            return "unknown error";
+    }
+}
+
+/**
+ * UTF-8 error code.
+ *
+ * @note This is used for error reporting in the non-throwing overloads.
+ *
+ * @see beetle::ErrorCode
+ */
+using ErrorCode = beetle::ErrorCode<utf8::Error, utf8::Error::eNone>;
+
+}  // namespace v1
 
 }  // namespace utf8
 
-// NOLINTNEXTLINE(readability-identifier-naming)
-inline namespace cpp20_v1 {
+inline namespace v1 {
 
 /**
  * Convert the given error into a string.
@@ -75,6 +137,10 @@ inline namespace cpp20_v1 {
  */
 [[nodiscard]] constexpr std::string to_string(utf8::Error error) {
     switch (error) {
+        case utf8::Error::eNone:
+            return "None";
+            break;
+
         case utf8::Error::eLeadingByte:
             return "Leading Byte";
             break;
@@ -96,24 +162,8 @@ inline namespace cpp20_v1 {
     }
 }
 
-/**
- * Create an error condition from the given UTF-8 error value.
- *
- * @param error The UTF-8 error code
- *
- * @return The error condition for the given error
- */
-[[nodiscard]] std::error_condition make_error_condition(utf8::Error error) noexcept;
-
-}  // namespace cpp20_v1
+}  // namespace v1
 
 }  // namespace beetle
-
-namespace std {
-
-template <>
-struct is_error_condition_enum<beetle::utf8::Error> : std::true_type {};
-
-}  // namespace std
 
 #endif
